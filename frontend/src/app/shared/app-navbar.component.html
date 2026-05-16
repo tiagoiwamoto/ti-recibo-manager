@@ -1,0 +1,14 @@
+<header class="app-navbar rounded-5 px-3 px-lg-4 py-3 d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+  <div class="brand-lockup">
+    <p class="eyebrow mb-1">IwaRecibos 2.0</p>
+    <h1 class="h3 mb-2">Backoffice web para clientes, recibos e configuracoes</h1>
+    <p class="text-secondary mb-0">Interface reescrita com Angular e Bootstrap.</p>
+  </div>
+
+  <nav class="nav nav-pills flex-wrap justify-content-lg-end gap-2">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">Dashboard</a>
+    <a routerLink="/clientes" routerLinkActive="active" class="nav-link">Clientes</a>
+    <a routerLink="/recibos" routerLinkActive="active" class="nav-link">Recibos</a>
+    <a routerLink="/configuracoes" routerLinkActive="active" class="nav-link">Configuracoes</a>
+  </nav>
+</header>

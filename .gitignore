@@ -1,0 +1,9 @@
+/.idea/
+/backend/.mvn/
+/backend/iwarecibos-web.db
+/backend/target/
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.angular/
+/iwarecibos-web.db
+/iwarecibos-web.mv.db

@@ -1,0 +1,73 @@
+<section>
+  <div class="app-hero d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+    <div>
+      <p class="eyebrow mb-1">Resumo operacional</p>
+      <h2 class="h3 mb-2">Painel de controle da migracao desktop para web</h2>
+      <p class="text-secondary mb-0">Visao geral dos cadastros e ultimos recibos emitidos.</p>
+    </div>
+
+    <button class="btn btn-dark rounded-pill px-4" type="button" (click)="load()" [disabled]="loading">
+      {{ loading ? 'Atualizando...' : 'Atualizar dados' }}
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="loading" class="alert alert-secondary">Carregando dados...</div>
+
+  <div *ngIf="summary as data">
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <app-stat-card label="Clientes" [value]="data.clientCount" helper="Cadastros disponiveis via API"></app-stat-card>
+      </div>
+      <div class="col-md-4">
+        <app-stat-card label="Recibos" [value]="data.receiptCount" helper="Documentos emitidos"></app-stat-card>
+      </div>
+      <div class="col-md-4">
+        <app-stat-card
+          label="Volume"
+          [value]="data.totalReceiptAmount | currency:'BRL':'symbol':'1.2-2':'pt-BR'"
+          helper="Soma dos recibos cadastrados"
+        ></app-stat-card>
+      </div>
+    </div>
+
+    <div class="card app-card">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+          <div>
+            <p class="eyebrow mb-1">Atividade recente</p>
+            <h3 class="h5 mb-0">Ultimos recibos</h3>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Pagador</th>
+                <th scope="col">Recebedor</th>
+                <th scope="col">Data</th>
+                <th scope="col">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let receipt of data.recentReceipts; trackBy: trackById">
+                <td>{{ receipt.id }}</td>
+                <td>{{ receipt.receiptType }}</td>
+                <td>{{ receipt.payerName }}</td>
+                <td>{{ receipt.receiverName }}</td>
+                <td>{{ receipt.issueDate }}</td>
+                <td>{{ receipt.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+              </tr>
+              <tr *ngIf="!data.recentReceipts?.length">
+                <td colspan="6" class="text-center text-secondary py-4">Nenhum recibo recente encontrado.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

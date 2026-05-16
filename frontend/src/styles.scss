@@ -1,0 +1,189 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+:root {
+  --ink-950: #0f1720;
+  --ink-900: #17202b;
+  --ink-700: #435060;
+  --ink-500: #697586;
+  --paper: rgba(255, 251, 245, 0.92);
+  --paper-strong: #fffdf8;
+  --line: rgba(23, 32, 43, 0.1);
+  --accent: #0f766e;
+  --accent-2: #b45309;
+  --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+}
+
+html,
+body,
+app-root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--ink-900);
+  font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(180, 83, 9, 0.18), transparent 32%),
+    radial-gradient(circle at right 20%, rgba(15, 118, 110, 0.22), transparent 28%),
+    linear-gradient(180deg, #fff7ed 0%, #f6efe6 100%);
+}
+
+h1,
+h2,
+h3,
+.h1,
+.h2,
+.h3,
+.card-title,
+.modal-title {
+  color: var(--ink-950);
+  font-family: 'Fraunces', serif;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.page-shell {
+  padding: 0 1rem 2rem;
+}
+
+.app-navbar {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+}
+
+.app-navbar .navbar-brand {
+  color: var(--ink-950);
+}
+
+.app-navbar .navbar-brand strong {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+}
+
+.app-navbar .nav-link {
+  color: var(--ink-700);
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.app-navbar .nav-link.active {
+  background: var(--ink-950);
+  color: #fffdf8;
+}
+
+.app-card,
+.app-stat-card,
+.app-hero {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+
+.app-card,
+.app-stat-card {
+  border-radius: 1.5rem;
+}
+
+.app-hero {
+  border-radius: 1.75rem;
+  padding: 1.5rem;
+}
+
+.app-stat-card .card-body {
+  padding: 1.5rem;
+}
+
+.stat-label {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent-2);
+}
+
+.stat-value {
+  color: var(--ink-950);
+  font-family: 'Fraunces', serif;
+  font-size: 2.4rem;
+  margin: 0.5rem 0;
+}
+
+.stat-helper {
+  color: var(--ink-700);
+  margin: 0;
+}
+
+.input-strong,
+.select-strong,
+.textarea-strong {
+  background: var(--paper-strong);
+  border-color: rgba(23, 32, 43, 0.14);
+  color: var(--ink-950);
+}
+
+.input-strong:focus,
+.select-strong:focus,
+.textarea-strong:focus {
+  border-color: rgba(15, 118, 110, 0.55);
+  box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.12);
+}
+
+.readonly-field {
+  background: #f4efe8;
+  color: var(--ink-700);
+  font-weight: 700;
+}
+
+.table thead th {
+  color: var(--ink-700);
+  border-bottom-color: rgba(23, 32, 43, 0.08);
+}
+
+.table tbody td {
+  color: var(--ink-900);
+  border-top-color: rgba(23, 32, 43, 0.08);
+}
+
+.table-hover tbody tr:hover td {
+  background: rgba(15, 118, 110, 0.05);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.receipt-modal-card {
+  width: min(1100px, calc(100vw - 2rem));
+}
+
+.receipt-iframe {
+  width: 100%;
+  height: 72vh;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+@media (max-width: 991px) {
+  .actions-cell {
+    justify-content: flex-start;
+  }
+}
+

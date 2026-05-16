@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recibo %s</title>
+    <style>
+        :root { --ink: #1f2937; --muted: #6b7280; --line: #d1d5db; --accent: #0f172a; --bg: #f8fafc; }
+        body { font-family: "Inter", "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 28px; }
+        .page { max-width: 860px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 34px 38px; box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08); }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 2px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 22px; }
+        .title-wrap h1 { margin: 0; font-size: 1.5rem; letter-spacing: .04em; color: var(--accent); }
+        .subtitle { margin-top: 6px; color: var(--muted); font-size: .92rem; text-transform: uppercase; letter-spacing: .08em; }
+        .id { text-align: right; font-size: .95rem; font-weight: 600; color: var(--accent); }
+        p { font-size: 1.02rem; line-height: 1.82; margin: 0 0 12px; text-align: justify; }
+        .field { font-weight: 700; color: #111827; }
+        .summary { margin-top: 18px; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: #fcfcfd; }
+        .summary-row { margin: 6px 0; }
+        .location-date { margin-top: 22px; text-align: right; font-weight: 500; }
+        .signatures { margin-top: 74px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 72px; }
+        .signature-card { min-height: 96px; display: flex; flex-direction: column; justify-content: flex-end; }
+        .signature-line { border-top: 2px solid #111827; padding-top: 8px; text-align: center; font-size: .95rem; line-height: 1.45; }
+        .signature-role { display: block; color: var(--muted); font-size: .82rem; text-transform: uppercase; letter-spacing: .08em; margin-top: 3px; }
+        .highlight { font-weight: 800; }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .page { border: none; border-radius: 0; max-width: none; padding: 0; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <section class="header">
+        <div class="title-wrap">
+            <h1>RECIBO</h1>
+            <div class="subtitle">Comprovante de Quitacao</div>
+        </div>
+        <div class="id">Recibo nº %s</div>
+    </section>
+    <section>
+        <p>
+            Recebi(emos) de <span class="field">%s</span>, inscrito(a) no documento
+            <span class="field highlight">%s</span>, a quantia de
+            <span class="field highlight">%s</span> (<span class="field">%s</span>),
+            referente a <span class="field highlight">%s</span>.
+        </p>
+        <p>Para clareza e quitacao, firmo(amos) o presente recibo.</p>
+        <div class="summary">
+            <div class="summary-row"><span class="field">Valor:</span> %s</div>
+            <div class="summary-row"><span class="field">Recebedor:</span> %s</div>
+            <div class="summary-row"><span class="field">Documento do recebedor:</span> %s</div>
+            <div class="summary-row"><span class="field">Emitente padrao:</span> %s</div>
+            <div class="summary-row"><span class="field">Observacoes:</span> %s</div>
+        </div>
+        <p class="location-date">%s, <span class="highlight">%s</span>.</p>
+    </section>
+    <section class="signatures">
+        <div class="signature-card">
+            <div class="signature-line">
+                %s<br>
+                %s
+                <span class="signature-role">Assinatura do Pagador</span>
+            </div>
+        </div>
+        <div class="signature-card">
+            <div class="signature-line">
+                %s<br>
+                %s
+                <span class="signature-role">Assinatura do Recebedor</span>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

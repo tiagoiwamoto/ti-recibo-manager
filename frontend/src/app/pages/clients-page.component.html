@@ -1,0 +1,139 @@
+<section class="row g-4">
+  <div class="col-lg-7">
+    <div class="card app-card h-100">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-3">
+          <div>
+            <p class="eyebrow mb-1">Cadastro</p>
+            <h2 class="h4 mb-0">Clientes</h2>
+          </div>
+
+          <div class="input-group w-auto flex-grow-1 flex-md-grow-0" style="min-width: min(100%, 28rem);">
+            <input
+              [(ngModel)]="search"
+              name="search"
+              class="form-control input-strong"
+              placeholder="Buscar por nome ou documento"
+              (keyup.enter)="load()"
+            />
+            <button class="btn btn-dark" type="button" (click)="load()">Buscar</button>
+          </div>
+        </div>
+
+        <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+        <div *ngIf="loading" class="alert alert-secondary">Carregando clientes...</div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Nome</th>
+                <th scope="col">Documento</th>
+                <th scope="col">Cidade</th>
+                <th scope="col" class="text-end">Acoes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let client of clients; trackBy: trackById">
+                <td>{{ client.name }}</td>
+                <td>{{ client.documentType }} {{ client.document }}</td>
+                <td>{{ client.city }}</td>
+                <td class="text-end">
+                  <div class="actions-cell">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" (click)="editClient(client)">Editar</button>
+                    <button class="btn btn-outline-danger btn-sm" type="button" (click)="remove(client.id)">Excluir</button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="!clients.length">
+                <td colspan="4" class="text-center text-secondary py-4">Nenhum cliente encontrado.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card app-card h-100">
+      <div class="card-body">
+        <p class="eyebrow mb-1">Formulario</p>
+        <h3 class="h4 mb-4">{{ clientForm.id ? 'Editar cliente' : 'Novo cliente' }}</h3>
+
+        <form (ngSubmit)="save()" #clientFormRef="ngForm" novalidate>
+          <div class="mb-3">
+            <label class="form-label">Nome</label>
+            <input class="form-control input-strong" name="name" [(ngModel)]="clientForm.name" required />
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-5">
+              <label class="form-label">Tipo documento</label>
+              <select class="form-select select-strong" name="documentType" [(ngModel)]="clientForm.documentType" (ngModelChange)="onDocumentTypeChange()">
+                <option value="CPF">CPF</option>
+                <option value="CNPJ">CNPJ</option>
+              </select>
+            </div>
+            <div class="col-md-7">
+              <label class="form-label">Documento</label>
+              <input class="form-control input-strong" name="document" [(ngModel)]="clientForm.document" (ngModelChange)="applyDocumentMask()" required />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">RG</label>
+            <input class="form-control input-strong" name="rg" [(ngModel)]="clientForm.rg" />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Data nascimento</label>
+            <input class="form-control input-strong" name="birthDate" [(ngModel)]="clientForm.birthDate" type="date" />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Endereco</label>
+            <input class="form-control input-strong" name="address" [(ngModel)]="clientForm.address" required />
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Cidade</label>
+              <input class="form-control input-strong" name="city" [(ngModel)]="clientForm.city" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Estado</label>
+              <input class="form-control input-strong" name="state" [(ngModel)]="clientForm.state" />
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">CEP</label>
+              <input class="form-control input-strong" name="postalCode" [(ngModel)]="clientForm.postalCode" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Pais</label>
+              <input class="form-control input-strong" name="country" [(ngModel)]="clientForm.country" />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Habilitacao</label>
+            <input class="form-control input-strong" name="driverLicense" [(ngModel)]="clientForm.driverLicense" />
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Observacoes</label>
+            <textarea class="form-control textarea-strong" name="notes" [(ngModel)]="clientForm.notes" rows="4"></textarea>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-dark" type="submit" [disabled]="loading">Salvar</button>
+            <button class="btn btn-outline-secondary" type="button" (click)="reset()">Limpar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
