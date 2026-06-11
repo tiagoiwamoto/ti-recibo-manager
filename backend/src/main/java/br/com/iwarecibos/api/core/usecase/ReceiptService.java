@@ -113,6 +113,9 @@ public class ReceiptService {
         return switch (resolveTemplate(template)) {
             case "Simples" -> renderSimples(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor, false);
             case "SimplesDuplo" -> renderSimples(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor, true);
+            case "Aurora" -> renderAurora(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor);
+            case "Atlas" -> renderAtlas(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor);
+            case "Horizonte" -> renderHorizonte(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor);
             default -> renderModerno(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor);
         };
     }
@@ -299,6 +302,395 @@ public class ReceiptService {
         );
     }
 
+    private String renderAurora(Receipt receipt, AppPreference config, String valorFormatado,
+                                String dataFormatada, String docPagador, String docRecebedor) {
+        return """
+                <!doctype html>
+                <html lang="pt-BR">
+                <head>
+                  <meta charset="utf-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                  <title>Recibo %s</title>
+                  <style>
+                    :root { --ink: #18212b; --muted: #667085; --line: rgba(24, 33, 43, 0.14); --accent: #0f766e; --accent-soft: #ecfdf5; --paper: #fffefb; }
+                    * { box-sizing: border-box; }
+                    body { margin: 0; padding: 28px; background: linear-gradient(180deg, #f6efe6 0%%, #eef7f4 100%%); color: var(--ink); font-family: "Inter", "Segoe UI", Arial, sans-serif; }
+                    .page { max-width: 860px; margin: 0 auto; background: var(--paper); border: 1px solid var(--line); border-radius: 28px; overflow: hidden; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12); }
+                    .hero { padding: 28px 34px 22px; background: radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 32%%), linear-gradient(135deg, #fff7ed 0%%, #ffffff 58%%); border-bottom: 1px solid var(--line); }
+                    .eyebrow { margin: 0 0 10px; text-transform: uppercase; letter-spacing: .18em; font-size: .74rem; font-weight: 800; color: var(--accent); }
+                    .hero-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+                    h1 { margin: 0; font-size: 2rem; letter-spacing: .06em; }
+                    .hero p { margin: 10px 0 0; max-width: 28rem; color: var(--muted); line-height: 1.6; }
+                    .value-card { min-width: 220px; padding: 18px 20px; border-radius: 22px; background: #0f172a; color: #f8fafc; text-align: right; }
+                    .value-card span { display: block; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; opacity: .72; }
+                    .value-card strong { display: block; margin-top: 8px; font-size: 1.8rem; line-height: 1.1; }
+                    .content { padding: 30px 34px 34px; }
+                    .content p { margin: 0 0 16px; font-size: 1.03rem; line-height: 1.85; text-align: justify; }
+                    .field { font-weight: 700; }
+                    .chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 22px 0; }
+                    .chip { border: 1px solid var(--line); background: #fff; border-radius: 18px; padding: 14px 16px; }
+                    .chip-label { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); margin-bottom: 8px; }
+                    .chip-value { font-weight: 700; line-height: 1.5; }
+                    .meta { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; margin-top: 26px; }
+                    .meta-card { border: 1px solid var(--line); background: var(--accent-soft); border-radius: 20px; padding: 16px 18px; }
+                    .meta-card strong { display: block; margin-bottom: 8px; font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+                    .date-box { display: flex; align-items: end; justify-content: center; text-align: center; }
+                    .date-box div { font-size: 1rem; line-height: 1.7; }
+                    .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 44px; margin-top: 62px; }
+                    .signature-flow { min-height: 96px; display: flex; flex-direction: column; justify-content: flex-end; }
+                    .signature-bar { border-top: 2px solid #18212b; padding-top: 10px; text-align: center; }
+                    .signature-name { font-weight: 800; font-size: 1rem; }
+                    .signature-doc { margin-top: 4px; color: var(--muted); font-size: .9rem; }
+                    .signature-role { margin-top: 8px; text-transform: uppercase; letter-spacing: .14em; font-size: .74rem; color: var(--accent); }
+                    @media print {
+                      body { padding: 0; background: #fff; }
+                      .page { border: none; border-radius: 0; box-shadow: none; max-width: none; }
+                    }
+                  </style>
+                </head>
+                <body>
+                  <main class="page">
+                    <section class="hero">
+                      <p class="eyebrow">Recibo contemporaneo</p>
+                      <div class="hero-row">
+                        <div>
+                          <h1>Quitacao registrada</h1>
+                          <p>Documento financeiro com composicao moderna, leitura leve e assinatura em fluxo separado para pagador e recebedor.</p>
+                        </div>
+                        <div class="value-card">
+                          <span>Recibo %s</span>
+                          <strong>%s</strong>
+                        </div>
+                      </div>
+                    </section>
+                    <section class="content">
+                      <p>
+                        Recebi(emos) de <span class="field">%s</span>, inscrito(a) no documento <span class="field">%s</span>,
+                        a quantia de <span class="field">%s</span> (<span class="field">%s</span>), referente a
+                        <span class="field">%s</span>.
+                      </p>
+                      <p>Para producao de efeitos de quitacao e comprovacao, este recibo segue assinado pelas partes indicadas abaixo.</p>
+                      <div class="chips">
+                        <div class="chip">
+                          <span class="chip-label">Recebedor</span>
+                          <div class="chip-value">%s<br>%s</div>
+                        </div>
+                        <div class="chip">
+                          <span class="chip-label">Emitente padrao</span>
+                          <div class="chip-value">%s</div>
+                        </div>
+                        <div class="chip">
+                          <span class="chip-label">Observacoes</span>
+                          <div class="chip-value">%s</div>
+                        </div>
+                      </div>
+                      <div class="meta">
+                        <div class="meta-card">
+                          <strong>Referencia</strong>
+                          <div>%s</div>
+                        </div>
+                        <div class="meta-card date-box">
+                          <div>%s<br>%s</div>
+                        </div>
+                      </div>
+                      <section class="signatures">
+                        <div class="signature-flow">
+                          <div class="signature-bar">
+                            <div class="signature-name">%s</div>
+                            <div class="signature-doc">%s</div>
+                            <div class="signature-role">Fluxo de assinatura do pagador</div>
+                          </div>
+                        </div>
+                        <div class="signature-flow">
+                          <div class="signature-bar">
+                            <div class="signature-name">%s</div>
+                            <div class="signature-doc">%s</div>
+                            <div class="signature-role">Fluxo de assinatura do recebedor</div>
+                          </div>
+                        </div>
+                      </section>
+                    </section>
+                  </main>
+                </body>
+                </html>
+                """.formatted(
+                escape(receipt.id()),
+                escape(receipt.id()),
+                escape(valorFormatado),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(valorFormatado),
+                escape(receipt.amountInWords()),
+                escape(receipt.reference()),
+                escape(receipt.receiverName()),
+                escape(docRecebedor),
+                escape(config.issuerName()),
+                escape(receipt.notes() == null ? "-" : receipt.notes()),
+                escape(receipt.reference()),
+                escape(receipt.place()),
+                escape(dataFormatada),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(receipt.receiverName()),
+                escape(docRecebedor)
+        );
+    }
+
+    private String renderAtlas(Receipt receipt, AppPreference config, String valorFormatado,
+                               String dataFormatada, String docPagador, String docRecebedor) {
+        return """
+                <!doctype html>
+                <html lang="pt-BR">
+                <head>
+                  <meta charset="utf-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                  <title>Recibo %s</title>
+                  <style>
+                    :root { --ink: #101828; --muted: #475467; --line: rgba(16, 24, 40, 0.12); --accent: #9a3412; --accent-deep: #7c2d12; }
+                    * { box-sizing: border-box; }
+                    body { margin: 0; padding: 30px; background: #f8f5f0; color: var(--ink); font-family: "Inter", "Segoe UI", Arial, sans-serif; }
+                    .page { max-width: 880px; margin: 0 auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 22px 56px rgba(15, 23, 42, 0.1); }
+                    .band { height: 14px; background: linear-gradient(90deg, #9a3412 0%%, #ea580c 50%%, #fdba74 100%%); }
+                    .content { padding: 30px 36px 34px; }
+                    .header { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: end; margin-bottom: 26px; }
+                    .kicker { margin: 0 0 8px; font-size: .76rem; text-transform: uppercase; letter-spacing: .18em; color: var(--accent); font-weight: 800; }
+                    h1 { margin: 0; font-size: 1.9rem; letter-spacing: .04em; }
+                    .header p { margin: 10px 0 0; color: var(--muted); line-height: 1.65; max-width: 32rem; }
+                    .number-box { border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; min-width: 210px; background: #fffaf5; text-align: right; }
+                    .number-box span { display: block; color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .14em; }
+                    .number-box strong { display: block; margin-top: 8px; font-size: 1.7rem; color: var(--accent-deep); }
+                    .body-copy { margin: 0 0 20px; font-size: 1.04rem; line-height: 1.9; text-align: justify; }
+                    .body-copy strong { color: #111827; }
+                    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 26px 0; }
+                    .grid-card { border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; background: #fff; }
+                    .grid-card.full { grid-column: 1 / -1; }
+                    .grid-card .label { display: block; margin-bottom: 8px; font-size: .74rem; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); }
+                    .grid-card .value { font-weight: 700; line-height: 1.6; }
+                    .footer-note { display: flex; justify-content: space-between; gap: 20px; margin-top: 14px; color: var(--muted); }
+                    .footer-note strong { color: var(--ink); }
+                    .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 52px; margin-top: 68px; }
+                    .signature-flow { min-height: 100px; display: flex; flex-direction: column; justify-content: flex-end; }
+                    .signature-topline { border-top: 2px solid #111827; padding-top: 12px; }
+                    .signature-name { text-align: center; font-weight: 800; font-size: 1rem; }
+                    .signature-doc { text-align: center; font-size: .9rem; color: var(--muted); margin-top: 4px; }
+                    .signature-role { text-align: center; margin-top: 8px; font-size: .74rem; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+                    @media print {
+                      body { padding: 0; background: #fff; }
+                      .page { border-radius: 0; box-shadow: none; max-width: none; }
+                    }
+                  </style>
+                </head>
+                <body>
+                  <main class="page">
+                    <div class="band"></div>
+                    <section class="content">
+                      <section class="header">
+                        <div>
+                          <p class="kicker">Modelo executivo</p>
+                          <h1>Recibo de quitacao</h1>
+                          <p>Estrutura em grade para dados essenciais, leitura rapida e fechamento com fluxos de assinatura distintos.</p>
+                        </div>
+                        <div class="number-box">
+                          <span>Identificacao</span>
+                          <strong>%s</strong>
+                        </div>
+                      </section>
+                      <p class="body-copy">
+                        Recebi(emos) de <strong>%s</strong>, documento <strong>%s</strong>, o valor de
+                        <strong>%s</strong> (<strong>%s</strong>), referente a <strong>%s</strong>.
+                      </p>
+                      <div class="grid">
+                        <div class="grid-card">
+                          <span class="label">Pagador</span>
+                          <div class="value">%s<br>%s</div>
+                        </div>
+                        <div class="grid-card">
+                          <span class="label">Recebedor</span>
+                          <div class="value">%s<br>%s</div>
+                        </div>
+                        <div class="grid-card">
+                          <span class="label">Valor</span>
+                          <div class="value">%s</div>
+                        </div>
+                        <div class="grid-card">
+                          <span class="label">Emitente padrao</span>
+                          <div class="value">%s</div>
+                        </div>
+                        <div class="grid-card full">
+                          <span class="label">Observacoes</span>
+                          <div class="value">%s</div>
+                        </div>
+                      </div>
+                      <div class="footer-note">
+                        <div><strong>Local:</strong> %s</div>
+                        <div><strong>Data:</strong> %s</div>
+                      </div>
+                      <section class="signatures">
+                        <div class="signature-flow">
+                          <div class="signature-topline">
+                            <div class="signature-name">%s</div>
+                            <div class="signature-doc">%s</div>
+                            <div class="signature-role">Assinatura do pagador</div>
+                          </div>
+                        </div>
+                        <div class="signature-flow">
+                          <div class="signature-topline">
+                            <div class="signature-name">%s</div>
+                            <div class="signature-doc">%s</div>
+                            <div class="signature-role">Assinatura do recebedor</div>
+                          </div>
+                        </div>
+                      </section>
+                    </section>
+                  </main>
+                </body>
+                </html>
+                """.formatted(
+                escape(receipt.id()),
+                escape(receipt.id()),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(valorFormatado),
+                escape(receipt.amountInWords()),
+                escape(receipt.reference()),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(receipt.receiverName()),
+                escape(docRecebedor),
+                escape(valorFormatado),
+                escape(config.issuerName()),
+                escape(receipt.notes() == null ? "-" : receipt.notes()),
+                escape(receipt.place()),
+                escape(dataFormatada),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(receipt.receiverName()),
+                escape(docRecebedor)
+        );
+    }
+
+    private String renderHorizonte(Receipt receipt, AppPreference config, String valorFormatado,
+                                   String dataFormatada, String docPagador, String docRecebedor) {
+        return """
+                <!doctype html>
+                <html lang="pt-BR">
+                <head>
+                  <meta charset="utf-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                  <title>Recibo %s</title>
+                  <style>
+                    :root { --ink: #14213d; --muted: #526077; --line: rgba(20, 33, 61, 0.14); --accent: #1d4ed8; --panel: #f8fbff; }
+                    * { box-sizing: border-box; }
+                    body { margin: 0; padding: 30px; background: linear-gradient(160deg, #edf4ff 0%%, #f8fafc 52%%, #eef7ff 100%%); color: var(--ink); font-family: "Inter", "Segoe UI", Arial, sans-serif; }
+                    .page { max-width: 880px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 26px; overflow: hidden; box-shadow: 0 24px 58px rgba(29, 78, 216, 0.08); }
+                    .topbar { padding: 18px 34px; background: #14213d; color: #eff6ff; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+                    .topbar span { text-transform: uppercase; letter-spacing: .18em; font-size: .76rem; opacity: .78; }
+                    .topbar strong { font-size: .96rem; letter-spacing: .08em; }
+                    .content { padding: 30px 34px 36px; }
+                    .lead { display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; align-items: start; margin-bottom: 24px; }
+                    h1 { margin: 0; font-size: 2rem; letter-spacing: .05em; }
+                    .subtitle { margin: 10px 0 0; color: var(--muted); line-height: 1.7; max-width: 34rem; }
+                    .amount-panel { border-radius: 24px; background: var(--panel); border: 1px solid var(--line); padding: 22px 24px; }
+                    .amount-panel span { display: block; font-size: .75rem; text-transform: uppercase; letter-spacing: .16em; color: var(--accent); }
+                    .amount-panel strong { display: block; margin-top: 10px; font-size: 2rem; line-height: 1.1; }
+                    .amount-panel small { display: block; margin-top: 10px; color: var(--muted); line-height: 1.6; }
+                    .copy { margin: 0 0 18px; font-size: 1.03rem; line-height: 1.9; text-align: justify; }
+                    .copy strong { color: #0f172a; }
+                    .stack { display: grid; gap: 14px; margin-top: 24px; }
+                    .stack-card { border: 1px solid var(--line); border-radius: 20px; padding: 16px 18px; background: #fff; }
+                    .stack-card .label { display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .14em; font-size: .74rem; color: var(--muted); }
+                    .stack-card .value { line-height: 1.7; font-weight: 700; }
+                    .signature-zone { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 46px; margin-top: 70px; }
+                    .signature-flow { min-height: 102px; display: flex; flex-direction: column; justify-content: flex-end; }
+                    .signature-stroke { border-top: 2px solid #14213d; padding-top: 12px; text-align: center; }
+                    .signature-stroke .name { font-size: 1rem; font-weight: 800; }
+                    .signature-stroke .doc { margin-top: 4px; font-size: .9rem; color: var(--muted); }
+                    .signature-stroke .role { margin-top: 8px; font-size: .74rem; color: var(--accent); letter-spacing: .16em; text-transform: uppercase; }
+                    @media print {
+                      body { padding: 0; background: #fff; }
+                      .page { max-width: none; border: none; border-radius: 0; box-shadow: none; }
+                    }
+                  </style>
+                </head>
+                <body>
+                  <main class="page">
+                    <div class="topbar">
+                      <span>Recibo formal</span>
+                      <strong>Documento %s</strong>
+                    </div>
+                    <section class="content">
+                      <section class="lead">
+                        <div>
+                          <h1>Comprovante de recebimento</h1>
+                          <p class="subtitle">Modelo atual com painel de valor, blocos verticais de leitura e area de assinaturas destacada ao final.</p>
+                        </div>
+                        <div class="amount-panel">
+                          <span>Valor recebido</span>
+                          <strong>%s</strong>
+                          <small>%s</small>
+                        </div>
+                      </section>
+                      <p class="copy">
+                        Declaro(amos) ter recebido de <strong>%s</strong>, inscrito(a) no documento <strong>%s</strong>,
+                        a importancia de <strong>%s</strong>, referente a <strong>%s</strong>.
+                      </p>
+                      <p class="copy">O presente recibo e emitido para fins de comprovacao e plena quitacao da operacao descrita.</p>
+                      <div class="stack">
+                        <div class="stack-card">
+                          <span class="label">Recebedor</span>
+                          <div class="value">%s<br>%s</div>
+                        </div>
+                        <div class="stack-card">
+                          <span class="label">Emitente padrao e observacoes</span>
+                          <div class="value">%s<br>%s</div>
+                        </div>
+                        <div class="stack-card">
+                          <span class="label">Local e data</span>
+                          <div class="value">%s, %s</div>
+                        </div>
+                      </div>
+                      <section class="signature-zone">
+                        <div class="signature-flow">
+                          <div class="signature-stroke">
+                            <div class="name">%s</div>
+                            <div class="doc">%s</div>
+                            <div class="role">Assinatura do pagador</div>
+                          </div>
+                        </div>
+                        <div class="signature-flow">
+                          <div class="signature-stroke">
+                            <div class="name">%s</div>
+                            <div class="doc">%s</div>
+                            <div class="role">Assinatura do recebedor</div>
+                          </div>
+                        </div>
+                      </section>
+                    </section>
+                  </main>
+                </body>
+                </html>
+                """.formatted(
+                escape(receipt.id()),
+                escape(receipt.id()),
+                escape(valorFormatado),
+                escape(receipt.amountInWords()),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(valorFormatado),
+                escape(receipt.reference()),
+                escape(receipt.receiverName()),
+                escape(docRecebedor),
+                escape(config.issuerName()),
+                escape(receipt.notes() == null ? "-" : receipt.notes()),
+                escape(receipt.place()),
+                escape(dataFormatada),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(receipt.receiverName()),
+                escape(docRecebedor)
+        );
+    }
+
     private String formatCurrency(BigDecimal amount) {
         NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
         return formatter.format(amount);
@@ -388,6 +780,9 @@ public class ReceiptService {
         return switch (template.trim()) {
             case "Simples" -> "Simples";
             case "SimplesDuplo" -> "SimplesDuplo";
+            case "Aurora" -> "Aurora";
+            case "Atlas" -> "Atlas";
+            case "Horizonte" -> "Horizonte";
             default -> "Moderno";
         };
     }

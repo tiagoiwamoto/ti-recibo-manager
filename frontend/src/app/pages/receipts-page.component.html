@@ -1,14 +1,14 @@
 <section>
   <div class="card app-card">
     <div class="card-body">
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-3">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-3 page-toolbar">
         <div>
           <p class="eyebrow mb-1">Emissao</p>
           <h2 class="h4 mb-0">Recibos</h2>
         </div>
 
-        <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch">
-          <div class="input-group" style="min-width: min(100%, 32rem);">
+        <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch page-toolbar-actions">
+          <div class="input-group page-toolbar-search">
             <input
               [(ngModel)]="search"
               name="search"
@@ -65,8 +65,8 @@
 <div *ngIf="modalOpen">
   <div class="modal-backdrop fade show" (click)="closeModal()"></div>
   <div class="modal d-block" tabindex="-1" aria-modal="true" role="dialog" (click)="closeModal()">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" (click)="$event.stopPropagation()">
-      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+    <div class="modal-dialog modal-lg modal-dialog-centered app-modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden app-modal-content">
         <div class="modal-header border-bottom-0 bg-white">
           <div>
             <p class="eyebrow mb-1">Formulario</p>
@@ -75,8 +75,8 @@
           <button type="button" class="btn-close" aria-label="Fechar" (click)="closeModal()"></button>
         </div>
 
-        <form (ngSubmit)="save()" #receiptFormRef="ngForm" novalidate>
-          <div class="modal-body">
+        <form class="app-modal-form" (ngSubmit)="save()" #receiptFormRef="ngForm" novalidate>
+          <div class="modal-body app-modal-body">
             <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
 
             <div class="row g-3 mb-3">

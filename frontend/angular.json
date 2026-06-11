@@ -65,9 +65,9 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
             "host": "0.0.0.0",
-            "ssl": true,
-            "sslCert": "../backend/certificates/fullchain.pem",
-            "sslKey": "../backend/certificates/privkey.pem"
+            "ssl": false,
+//            "sslCert": "../backend/certificates/fullchain.pem",
+//            "sslKey": "../backend/certificates/privkey.pem"
           },
           "configurations": {
             "production": {

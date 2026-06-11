@@ -49,9 +49,7 @@
           <div class="mb-4">
             <label class="form-label">Template</label>
             <select class="form-select select-strong" name="receiptTemplate" [(ngModel)]="form.receiptTemplate">
-              <option value="Moderno">Moderno</option>
-              <option value="Simples">Simples</option>
-              <option value="SimplesDuplo">SimplesDuplo</option>
+              <option *ngFor="let option of templates" [value]="option.value">{{ option.label }}</option>
             </select>
           </div>
 

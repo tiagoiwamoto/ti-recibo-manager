@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
-import { AppConfig } from '../core/models';
+import { AppConfig, RECEIPT_TEMPLATES } from '../core/models';
 import { formatByDocumentType } from '../core/document-mask';
 import { DocumentMaskDirective } from '../core/document-mask.directive';
 
@@ -14,6 +14,8 @@ import { DocumentMaskDirective } from '../core/document-mask.directive';
   templateUrl: './settings-page.component.html'
 })
 export class SettingsPageComponent implements OnInit {
+  readonly templates = RECEIPT_TEMPLATES;
+
   form: AppConfig = this.emptyForm();
   loading = false;
   error = '';

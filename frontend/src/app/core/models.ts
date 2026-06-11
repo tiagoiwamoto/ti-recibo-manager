@@ -1,6 +1,12 @@
 export type DocumentType = 'CPF' | 'CNPJ';
 export type ReceiptType = 'CREDITOR' | 'DEBTOR';
-export type ReceiptTemplate = 'Moderno' | 'Simples' | 'SimplesDuplo';
+export type ReceiptTemplate =
+  | 'Moderno'
+  | 'Simples'
+  | 'SimplesDuplo'
+  | 'Aurora'
+  | 'Atlas'
+  | 'Horizonte';
 
 export interface ReceiptTemplateOption {
   value: ReceiptTemplate;
@@ -11,7 +17,10 @@ export interface ReceiptTemplateOption {
 export const RECEIPT_TEMPLATES: ReceiptTemplateOption[] = [
   { value: 'Moderno', label: 'Moderno', description: 'Layout completo com resumo e duas assinaturas.' },
   { value: 'Simples', label: 'Simples', description: 'Recibo enxuto com uma assinatura (recebedor).' },
-  { value: 'SimplesDuplo', label: 'Simples duplo', description: 'Recibo enxuto com assinaturas de pagador e recebedor.' }
+  { value: 'SimplesDuplo', label: 'Simples duplo', description: 'Recibo enxuto com assinaturas de pagador e recebedor.' },
+  { value: 'Aurora', label: 'Aurora', description: 'Visual editorial com destaque para valor e bloco de assinaturas elegante.' },
+  { value: 'Atlas', label: 'Atlas', description: 'Composicao executiva com grade de dados e assinaturas separadas por fluxo.' },
+  { value: 'Horizonte', label: 'Horizonte', description: 'Layout contemporaneo com faixa superior e assinaturas amplas no rodape.' }
 ];
 
 export interface DashboardSummary {
@@ -98,7 +107,7 @@ export interface AppConfig {
   issuerDocumentType: DocumentType;
   city: string;
   logoPath: string;
-  receiptTemplate: string;
+  receiptTemplate: ReceiptTemplate;
 }
 
 export interface ReceiptPreviewResponse {

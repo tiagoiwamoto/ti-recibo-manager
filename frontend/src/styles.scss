@@ -169,6 +169,48 @@ h3,
   flex-wrap: wrap;
 }
 
+.page-toolbar {
+  min-width: 0;
+}
+
+.page-toolbar-actions {
+  min-width: 0;
+}
+
+.page-toolbar-search {
+  flex: 1 1 28rem;
+  min-width: min(100%, 18rem);
+}
+
+.app-modal-dialog {
+  width: min(960px, calc(100vw - 2rem));
+  max-width: min(960px, calc(100vw - 2rem));
+  margin: 1rem auto;
+}
+
+.app-modal-dialog.modal-lg {
+  max-width: min(960px, calc(100vw - 2rem));
+}
+
+.app-modal-content {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 2rem);
+}
+
+.app-modal-form {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.app-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .receipt-modal-card {
   width: min(1100px, calc(100vw - 2rem));
 }
@@ -184,6 +226,25 @@ h3,
 @media (max-width: 991px) {
   .actions-cell {
     justify-content: flex-start;
+  }
+
+  .page-toolbar-actions {
+    width: 100%;
+  }
+
+  .page-toolbar-search {
+    min-width: 0;
+  }
+
+  .app-modal-dialog,
+  .app-modal-dialog.modal-lg {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    margin: 0.5rem auto;
+  }
+
+  .app-modal-content {
+    max-height: calc(100vh - 1rem);
   }
 }
 
