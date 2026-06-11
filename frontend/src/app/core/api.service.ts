@@ -46,8 +46,14 @@ export class ApiService {
     return this.http.delete<void>(this.url(`/receipts/${id}`));
   }
 
-  previewReceipt(id: string): Observable<ReceiptPreviewResponse> {
-    return this.http.get<ReceiptPreviewResponse>(this.url(`/receipts/${id}/preview`));
+  previewReceipt(id: string, template?: string): Observable<ReceiptPreviewResponse> {
+    const params = template ? new HttpParams().set('template', template) : undefined;
+    return this.http.get<ReceiptPreviewResponse>(this.url(`/receipts/${id}/preview`), { params });
+  }
+
+  previewReceiptDraft(payload: ReceiptForm, template?: string): Observable<ReceiptPreviewResponse> {
+    const params = template ? new HttpParams().set('template', template) : undefined;
+    return this.http.post<ReceiptPreviewResponse>(this.url('/receipts/preview'), payload, { params });
   }
 
   getConfig(): Observable<AppConfig> {

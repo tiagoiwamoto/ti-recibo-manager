@@ -5,11 +5,12 @@ import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { Client, ClientForm } from '../core/models';
 import { formatByDocumentType } from '../core/document-mask';
+import { DocumentMaskDirective } from '../core/document-mask.directive';
 
 @Component({
   selector: 'app-clients-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DocumentMaskDirective],
   templateUrl: './clients-page.component.html'
 })
 export class ClientsPageComponent implements OnInit {
@@ -17,6 +18,7 @@ export class ClientsPageComponent implements OnInit {
   search = '';
   loading = false;
   error = '';
+  modalOpen = false;
   clientForm: ClientForm = this.emptyForm();
 
   constructor(private readonly api: ApiService) {}
@@ -43,8 +45,10 @@ export class ClientsPageComponent implements OnInit {
     };
   }
 
-  reset(): void {
+  openCreate(): void {
     this.clientForm = this.emptyForm();
+    this.error = '';
+    this.modalOpen = true;
   }
 
   editClient(client: Client): void {
@@ -63,7 +67,13 @@ export class ClientsPageComponent implements OnInit {
       country: client.country ?? 'Brasil',
       notes: client.notes ?? ''
     };
-    this.applyDocumentMask();
+    this.clientForm.document = formatByDocumentType(this.clientForm.document, this.clientForm.documentType);
+    this.error = '';
+    this.modalOpen = true;
+  }
+
+  closeModal(): void {
+    this.modalOpen = false;
   }
 
   async load(): Promise<void> {
@@ -93,7 +103,7 @@ export class ClientsPageComponent implements OnInit {
         await firstValueFrom(this.api.createClient(payload as ClientForm));
       }
 
-      this.reset();
+      this.modalOpen = false;
       await this.load();
     } catch (error) {
       this.error = this.describeError(error);
@@ -112,9 +122,6 @@ export class ClientsPageComponent implements OnInit {
 
     try {
       await firstValueFrom(this.api.deleteClient(id));
-      if (this.clientForm.id === id) {
-        this.reset();
-      }
       await this.load();
     } catch (error) {
       this.error = this.describeError(error);
@@ -125,14 +132,6 @@ export class ClientsPageComponent implements OnInit {
 
   trackById(_: number, client: Client): string {
     return client.id;
-  }
-
-  applyDocumentMask(): void {
-    this.clientForm.document = formatByDocumentType(this.clientForm.document, this.clientForm.documentType);
-  }
-
-  onDocumentTypeChange(): void {
-    this.applyDocumentMask();
   }
 
   private describeError(error: unknown): string {

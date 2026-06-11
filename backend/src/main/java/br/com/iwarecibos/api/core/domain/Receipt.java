@@ -18,6 +18,7 @@ public record Receipt(
         String issueDateText,
         String receiverName,
         String receiverDocument,
-        DocumentType receiverDocumentType
+        DocumentType receiverDocumentType,
+        String template
 ) {
 }

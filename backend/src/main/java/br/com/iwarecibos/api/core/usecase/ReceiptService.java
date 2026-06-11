@@ -1,5 +1,7 @@
 package br.com.iwarecibos.api.core.usecase;
 
+import br.com.iwarecibos.api.core.domain.AppPreference;
+import br.com.iwarecibos.api.core.domain.DocumentType;
 import br.com.iwarecibos.api.core.domain.Receipt;
 import br.com.iwarecibos.api.core.entity.ReceiptJpaEntity;
 import br.com.iwarecibos.api.core.repository.SpringDataReceiptRepository;
@@ -56,13 +58,67 @@ public class ReceiptService {
     }
 
     public String renderPreview(String id) {
-        var config = appPreferenceUsecase.get();
+        return renderPreview(id, null);
+    }
+
+    public String renderPreview(String id, String templateOverride) {
         Receipt receipt = get(id);
+        String template = (templateOverride != null && !templateOverride.isBlank())
+                ? templateOverride
+                : receipt.template();
+        return render(receipt, template);
+    }
+
+    public String renderPreviewFromRequest(ReceiptRequest request, String templateOverride) {
+        Receipt receipt = transientReceipt(request);
+        String template = (templateOverride != null && !templateOverride.isBlank())
+                ? templateOverride
+                : request.template();
+        return render(receipt, template);
+    }
+
+    private Receipt transientReceipt(ReceiptRequest request) {
+        LocalDate issueDate = parseDateOrNow(request.issueDate());
+        BigDecimal amount = request.amount() == null
+                ? BigDecimal.ZERO
+                : request.amount().setScale(2, RoundingMode.HALF_UP);
+
+        return new Receipt(
+                "PREVIEW",
+                request.receiptType(),
+                amount,
+                nz(request.payerName()),
+                nz(request.payerDocument()),
+                request.payerDocumentType() == null ? DocumentType.CPF : request.payerDocumentType(),
+                resolveAmountInWords(amount, request.amountInWords()),
+                nz(request.reference()),
+                blankToNull(request.notes()),
+                issueDate,
+                nz(request.place()),
+                resolveIssueDateText(issueDate, request.issueDateText()),
+                nz(request.receiverName()),
+                nz(request.receiverDocument()),
+                request.receiverDocumentType() == null ? DocumentType.CPF : request.receiverDocumentType(),
+                resolveTemplate(request.template())
+        );
+    }
+
+    private String render(Receipt receipt, String template) {
+        var config = appPreferenceUsecase.get();
         String valorFormatado = formatCurrency(receipt.amount());
         String dataFormatada = formatDate(receipt.issueDate());
         String docPagador = formatDocument(receipt.payerDocument(), receipt.payerDocumentType().name());
         String docRecebedor = formatDocument(receipt.receiverDocument(), receipt.receiverDocumentType().name());
 
+        return switch (resolveTemplate(template)) {
+            case "Simples" -> renderSimples(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor, false);
+            case "SimplesDuplo" -> renderSimples(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor, true);
+            default -> renderModerno(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor);
+        };
+    }
+
+    private String renderModerno(Receipt receipt, AppPreference config, String valorFormatado,
+                                 String dataFormatada, String docPagador, String docRecebedor) {
         return """
                 <!doctype html>
                 <html lang="pt-BR">
@@ -161,6 +217,88 @@ public class ReceiptService {
         );
     }
 
+    private String renderSimples(Receipt receipt, AppPreference config, String valorFormatado,
+                                 String dataFormatada, String docPagador, String docRecebedor,
+                                 boolean doubleSignature) {
+        String signatures = doubleSignature
+                ? """
+                    <section class="signatures dual">
+                      <div class="signature">
+                        <div class="line"></div>
+                        <div class="name">%s</div>
+                        <div class="role">Pagador</div>
+                      </div>
+                      <div class="signature">
+                        <div class="line"></div>
+                        <div class="name">%s</div>
+                        <div class="role">Recebedor</div>
+                      </div>
+                    </section>
+                    """.formatted(escape(receipt.payerName()), escape(receipt.receiverName()))
+                : """
+                    <section class="signatures single">
+                      <div class="signature">
+                        <div class="line"></div>
+                        <div class="name">%s</div>
+                        <div class="role">Recebedor</div>
+                      </div>
+                    </section>
+                    """.formatted(escape(receipt.receiverName()));
+
+        return """
+                <!doctype html>
+                <html lang="pt-BR">
+                <head>
+                  <meta charset="utf-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                  <title>Recibo %s</title>
+                  <style>
+                    body { font-family: "Courier New", "Georgia", serif; color: #111; margin: 0; padding: 32px; background: #f3f4f6; }
+                    .page { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid #111; padding: 40px 44px; }
+                    .top { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 24px; }
+                    .top h1 { margin: 0; font-size: 1.7rem; letter-spacing: .18em; }
+                    .value-tag { font-size: 1.2rem; font-weight: 700; border: 2px solid #111; padding: 4px 12px; }
+                    p { font-size: 1.05rem; line-height: 1.95; text-align: justify; margin: 0 0 16px; }
+                    .b { font-weight: 700; }
+                    .place-date { margin-top: 28px; text-align: right; }
+                    .signatures { margin-top: 80px; }
+                    .signatures.dual { display: grid; grid-template-columns: 1fr 1fr; column-gap: 64px; }
+                    .signature .line { border-top: 1.5px solid #111; }
+                    .signature .name { text-align: center; margin-top: 6px; font-weight: 700; }
+                    .signature .role { text-align: center; font-size: .82rem; text-transform: uppercase; letter-spacing: .12em; color: #555; }
+                    @media print { body { padding: 0; background: #fff; } .page { border: none; max-width: none; padding: 0; } }
+                  </style>
+                </head>
+                <body>
+                  <main class="page">
+                    <section class="top">
+                      <h1>RECIBO</h1>
+                      <span class="value-tag">%s</span>
+                    </section>
+                    <p>
+                      Recebi de <span class="b">%s</span> (documento <span class="b">%s</span>) a importancia de
+                      <span class="b">%s</span> (%s), referente a <span class="b">%s</span>.
+                    </p>
+                    <p>E para maior clareza firmo o presente recibo, dando plena quitacao.</p>
+                    <p class="place-date">%s, %s.</p>
+                    %s
+                  </main>
+                </body>
+                </html>
+                """.formatted(
+                escape(receipt.id()),
+                escape(valorFormatado),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(valorFormatado),
+                escape(receipt.amountInWords()),
+                escape(receipt.reference()),
+                escape(receipt.place()),
+                escape(dataFormatada),
+                signatures
+        );
+    }
+
     private String formatCurrency(BigDecimal amount) {
         NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
         return formatter.format(amount);
@@ -200,7 +338,8 @@ public class ReceiptService {
                 resolveIssueDateText(issueDate, request.issueDateText()),
                 request.receiverName().trim(),
                 sanitizeDocument(request.receiverDocument()),
-                request.receiverDocumentType()
+                request.receiverDocumentType(),
+                resolveTemplate(request.template())
         );
     }
 
@@ -220,7 +359,8 @@ public class ReceiptService {
                 entity.getIssueDateText(),
                 entity.getReceiverName(),
                 entity.getReceiverDocument(),
-                entity.getReceiverDocumentType()
+                entity.getReceiverDocumentType(),
+                resolveTemplate(entity.getTemplate())
         );
     }
 
@@ -235,6 +375,32 @@ public class ReceiptService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private String nz(String value) {
+        return value == null ? "" : value;
+    }
+
+    private String resolveTemplate(String template) {
+        if (template == null || template.isBlank()) {
+            return "Moderno";
+        }
+        return switch (template.trim()) {
+            case "Simples" -> "Simples";
+            case "SimplesDuplo" -> "SimplesDuplo";
+            default -> "Moderno";
+        };
+    }
+
+    private LocalDate parseDateOrNow(String value) {
+        if (value == null || value.isBlank()) {
+            return LocalDate.now();
+        }
+        try {
+            return LocalDate.parse(value);
+        } catch (RuntimeException ex) {
+            return LocalDate.now();
+        }
     }
 
     private String resolveAmountInWords(BigDecimal amount, String value) {
