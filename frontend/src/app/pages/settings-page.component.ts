@@ -5,11 +5,12 @@ import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
 import { AppConfig } from '../core/models';
 import { formatByDocumentType } from '../core/document-mask';
+import { DocumentMaskDirective } from '../core/document-mask.directive';
 
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DocumentMaskDirective],
   templateUrl: './settings-page.component.html'
 })
 export class SettingsPageComponent implements OnInit {
@@ -67,10 +68,6 @@ export class SettingsPageComponent implements OnInit {
 
   applyIssuerMask(): void {
     this.form.issuerDocument = formatByDocumentType(this.form.issuerDocument, this.form.issuerDocumentType);
-  }
-
-  onIssuerDocumentTypeChange(): void {
-    this.applyIssuerMask();
   }
 
   async onLogoSelected(event: Event): Promise<void> {

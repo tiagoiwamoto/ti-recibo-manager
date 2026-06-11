@@ -18,14 +18,14 @@
           <div class="row g-3 mb-3">
             <div class="col-md-5">
               <label class="form-label">Tipo documento</label>
-              <select class="form-select select-strong" name="issuerDocumentType" [(ngModel)]="form.issuerDocumentType" (ngModelChange)="onIssuerDocumentTypeChange()">
+              <select class="form-select select-strong" name="issuerDocumentType" [(ngModel)]="form.issuerDocumentType">
                 <option value="CPF">CPF</option>
                 <option value="CNPJ">CNPJ</option>
               </select>
             </div>
             <div class="col-md-7">
               <label class="form-label">Documento</label>
-              <input class="form-control input-strong" name="issuerDocument" [(ngModel)]="form.issuerDocument" (ngModelChange)="applyIssuerMask()" required />
+              <input class="form-control input-strong" name="issuerDocument" inputmode="numeric" [(ngModel)]="form.issuerDocument" [appDocumentMask]="form.issuerDocumentType" required />
             </div>
           </div>
 

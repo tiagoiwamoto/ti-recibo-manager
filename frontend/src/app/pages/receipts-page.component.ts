@@ -3,24 +3,29 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../core/api.service';
-import { Receipt, ReceiptForm } from '../core/models';
+import { Receipt, ReceiptForm, ReceiptTemplate, RECEIPT_TEMPLATES } from '../core/models';
 import { amountToWords, dateToWords } from '../core/receipt-utils';
 import { formatByDocumentType } from '../core/document-mask';
+import { DocumentMaskDirective } from '../core/document-mask.directive';
 
 @Component({
   selector: 'app-receipts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DocumentMaskDirective],
   templateUrl: './receipts-page.component.html'
 })
 export class ReceiptsPageComponent implements OnInit {
   @ViewChild('previewFrame') previewFrame?: ElementRef<HTMLIFrameElement>;
 
+  readonly templates = RECEIPT_TEMPLATES;
+
   receipts: Receipt[] = [];
   search = '';
   loading = false;
   error = '';
+  modalOpen = false;
   previewOpen = false;
+  previewLoading = false;
   previewHtml = '';
   receiptForm: ReceiptForm = this.emptyForm();
   amountInput = '';
@@ -48,21 +53,29 @@ export class ReceiptsPageComponent implements OnInit {
       issueDateText: '',
       receiverName: '',
       receiverDocument: '',
-      receiverDocumentType: 'CPF'
+      receiverDocumentType: 'CPF',
+      template: 'Moderno'
     };
   }
 
-  reset(): void {
+  openCreate(): void {
     this.receiptForm = this.emptyForm();
     this.amountInput = this.formatCurrencyFromNumber(this.receiptForm.amount);
-    this.closePreview();
+    this.error = '';
+    this.modalOpen = true;
   }
 
   editReceipt(receipt: Receipt): void {
     this.receiptForm = this.toForm(receipt);
     this.amountInput = this.formatCurrencyFromNumber(this.receiptForm.amount);
-    this.applyPayerDocumentMask();
-    this.applyReceiverDocumentMask();
+    this.receiptForm.payerDocument = formatByDocumentType(this.receiptForm.payerDocument, this.receiptForm.payerDocumentType);
+    this.receiptForm.receiverDocument = formatByDocumentType(this.receiptForm.receiverDocument, this.receiptForm.receiverDocumentType);
+    this.error = '';
+    this.modalOpen = true;
+  }
+
+  closeModal(): void {
+    this.modalOpen = false;
   }
 
   async load(): Promise<void> {
@@ -83,21 +96,15 @@ export class ReceiptsPageComponent implements OnInit {
     this.error = '';
 
     try {
-      this.receiptForm.amount = this.parseCurrencyToNumber(this.amountInput);
-      const { id, ...payload } = this.receiptForm;
-      const requestPayload = {
-        ...payload,
-        amount: Number(payload.amount)
-      };
+      const saved = await firstValueFrom(
+        this.receiptForm.id
+          ? this.api.updateReceipt(this.receiptForm.id, this.buildPayload())
+          : this.api.createReceipt(this.buildPayload())
+      );
 
-      const saved = this.receiptForm.id
-        ? await firstValueFrom(this.api.updateReceipt(this.receiptForm.id, requestPayload as ReceiptForm))
-        : await firstValueFrom(this.api.createReceipt(requestPayload as ReceiptForm));
-
-      this.receiptForm = this.toForm(saved);
-      this.amountInput = this.formatCurrencyFromNumber(this.receiptForm.amount);
+      this.modalOpen = false;
       await this.load();
-      await this.preview(saved.id, true);
+      await this.preview(saved.id, saved.template ?? this.receiptForm.template, true);
     } catch (error) {
       this.error = this.describeError(error);
     } finally {
@@ -115,9 +122,6 @@ export class ReceiptsPageComponent implements OnInit {
 
     try {
       await firstValueFrom(this.api.deleteReceipt(id));
-      if (this.receiptForm.id === id) {
-        this.reset();
-      }
       await this.load();
     } catch (error) {
       this.error = this.describeError(error);
@@ -126,19 +130,46 @@ export class ReceiptsPageComponent implements OnInit {
     }
   }
 
-  async preview(id: string | null | undefined, openModal = false): Promise<void> {
+  async preview(id: string | null | undefined, template?: string, openModal = false): Promise<void> {
     if (!id) {
       return;
     }
 
+    this.previewLoading = true;
     try {
-      const response = await firstValueFrom(this.api.previewReceipt(id));
+      const response = await firstValueFrom(this.api.previewReceipt(id, template));
       this.previewHtml = response.html;
       if (openModal) {
         this.previewOpen = true;
       }
     } catch (error) {
       this.error = this.describeError(error);
+    } finally {
+      this.previewLoading = false;
+    }
+  }
+
+  async previewDraft(openModal = true): Promise<void> {
+    this.previewLoading = true;
+    this.error = '';
+    try {
+      const response = await firstValueFrom(
+        this.api.previewReceiptDraft(this.buildPayload(), this.receiptForm.template)
+      );
+      this.previewHtml = response.html;
+      if (openModal) {
+        this.previewOpen = true;
+      }
+    } catch (error) {
+      this.error = this.describeError(error);
+    } finally {
+      this.previewLoading = false;
+    }
+  }
+
+  onTemplateChange(): void {
+    if (this.previewOpen) {
+      void this.previewDraft(false);
     }
   }
 
@@ -168,20 +199,18 @@ export class ReceiptsPageComponent implements OnInit {
     return receipt.id;
   }
 
-  applyPayerDocumentMask(): void {
-    this.receiptForm.payerDocument = formatByDocumentType(this.receiptForm.payerDocument, this.receiptForm.payerDocumentType);
+  templateLabel(value: ReceiptTemplate | null | undefined): string {
+    return this.templates.find((option) => option.value === value)?.label ?? 'Moderno';
   }
 
-  onPayerDocumentTypeChange(): void {
-    this.applyPayerDocumentMask();
+  templateDescription(value: ReceiptTemplate | null | undefined): string {
+    return this.templates.find((option) => option.value === value)?.description ?? '';
   }
 
-  applyReceiverDocumentMask(): void {
-    this.receiptForm.receiverDocument = formatByDocumentType(this.receiptForm.receiverDocument, this.receiptForm.receiverDocumentType);
-  }
-
-  onReceiverDocumentTypeChange(): void {
-    this.applyReceiverDocumentMask();
+  private buildPayload(): ReceiptForm {
+    this.receiptForm.amount = this.parseCurrencyToNumber(this.amountInput);
+    const { id, ...payload } = this.receiptForm;
+    return { ...payload, amount: Number(payload.amount) } as ReceiptForm;
   }
 
   private toForm(receipt: Receipt): ReceiptForm {
@@ -200,7 +229,8 @@ export class ReceiptsPageComponent implements OnInit {
       issueDateText: receipt.issueDateText ?? dateToWords(receipt.issueDate),
       receiverName: receipt.receiverName ?? '',
       receiverDocument: receipt.receiverDocument ?? '',
-      receiverDocumentType: receipt.receiverDocumentType ?? 'CPF'
+      receiverDocumentType: receipt.receiverDocumentType ?? 'CPF',
+      template: receipt.template ?? 'Moderno'
     };
   }
 

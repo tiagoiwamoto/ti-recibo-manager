@@ -70,6 +70,9 @@ public class ReceiptJpaEntity {
     @Column(name = "receiver_document_type", nullable = false)
     private DocumentType receiverDocumentType;
 
+    @Column(name = "template", nullable = false)
+    private String template;
+
     public String getId() {
         return id;
     }
@@ -188,5 +191,13 @@ public class ReceiptJpaEntity {
 
     public void setReceiverDocumentType(DocumentType receiverDocumentType) {
         this.receiverDocumentType = receiverDocumentType;
+    }
+
+    public String getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(String template) {
+        this.template = template;
     }
 }
