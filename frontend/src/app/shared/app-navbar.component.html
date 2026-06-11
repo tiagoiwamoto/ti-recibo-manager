@@ -5,10 +5,11 @@
     <p class="text-secondary mb-0">Interface reescrita com Angular e Bootstrap.</p>
   </div>
 
-  <nav class="nav nav-pills flex-wrap justify-content-lg-end gap-2">
+  <nav class="nav nav-pills flex-wrap align-items-center justify-content-lg-end gap-2">
     <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">Dashboard</a>
     <a routerLink="/clientes" routerLinkActive="active" class="nav-link">Clientes</a>
     <a routerLink="/recibos" routerLinkActive="active" class="nav-link">Recibos</a>
     <a routerLink="/configuracoes" routerLinkActive="active" class="nav-link">Configuracoes</a>
+    <button type="button" class="btn btn-outline-secondary btn-sm ms-lg-2" (click)="onLogout()">Sair</button>
   </nav>
 </header>

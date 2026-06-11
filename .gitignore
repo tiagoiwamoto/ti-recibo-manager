@@ -7,3 +7,8 @@
 /frontend/.angular/
 /iwarecibos-web.db
 /iwarecibos-web.mv.db
+
+# SSL Certificates (Let's Encrypt) - never commit the actual key material
+/backend/certificates/*.pem
+/backend/certificates/*.p12
+/backend/certificates/*.jks
