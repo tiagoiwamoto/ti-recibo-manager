@@ -1,5 +1,18 @@
 export type DocumentType = 'CPF' | 'CNPJ';
 export type ReceiptType = 'CREDITOR' | 'DEBTOR';
+export type ReceiptTemplate = 'Moderno' | 'Simples' | 'SimplesDuplo';
+
+export interface ReceiptTemplateOption {
+  value: ReceiptTemplate;
+  label: string;
+  description: string;
+}
+
+export const RECEIPT_TEMPLATES: ReceiptTemplateOption[] = [
+  { value: 'Moderno', label: 'Moderno', description: 'Layout completo com resumo e duas assinaturas.' },
+  { value: 'Simples', label: 'Simples', description: 'Recibo enxuto com uma assinatura (recebedor).' },
+  { value: 'SimplesDuplo', label: 'Simples duplo', description: 'Recibo enxuto com assinaturas de pagador e recebedor.' }
+];
 
 export interface DashboardSummary {
   clientCount: number;
@@ -56,6 +69,7 @@ export interface Receipt {
   receiverName: string;
   receiverDocument: string;
   receiverDocumentType: DocumentType;
+  template?: ReceiptTemplate | null;
 }
 
 export interface ReceiptForm {
@@ -74,6 +88,7 @@ export interface ReceiptForm {
   receiverName: string;
   receiverDocument: string;
   receiverDocumentType: DocumentType;
+  template: ReceiptTemplate;
 }
 
 export interface AppConfig {

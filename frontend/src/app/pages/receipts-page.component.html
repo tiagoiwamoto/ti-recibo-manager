@@ -1,14 +1,14 @@
-<section class="row g-4">
-  <div class="col-lg-7">
-    <div class="card app-card h-100">
-      <div class="card-body">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-3">
-          <div>
-            <p class="eyebrow mb-1">Emissao</p>
-            <h2 class="h4 mb-0">Recibos</h2>
-          </div>
+<section>
+  <div class="card app-card">
+    <div class="card-body">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-3">
+        <div>
+          <p class="eyebrow mb-1">Emissao</p>
+          <h2 class="h4 mb-0">Recibos</h2>
+        </div>
 
-          <div class="input-group w-auto flex-grow-1 flex-md-grow-0" style="min-width: min(100%, 32rem);">
+        <div class="d-flex flex-column flex-sm-row gap-2 align-items-stretch">
+          <div class="input-group" style="min-width: min(100%, 32rem);">
             <input
               [(ngModel)]="search"
               name="search"
@@ -16,161 +16,198 @@
               placeholder="Buscar por pagador, recebedor ou documento"
               (keyup.enter)="load()"
             />
-            <button class="btn btn-dark rounded-end-pill" type="button" (click)="load()">Buscar</button>
+            <button class="btn btn-dark" type="button" (click)="load()">Buscar</button>
           </div>
+          <button class="btn btn-primary" type="button" (click)="openCreate()">Novo recibo</button>
         </div>
+      </div>
 
-        <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
-        <div *ngIf="loading" class="alert alert-secondary">Carregando recibos...</div>
+      <div *ngIf="error && !modalOpen && !previewOpen" class="alert alert-danger">{{ error }}</div>
+      <div *ngIf="loading" class="alert alert-secondary">Carregando recibos...</div>
 
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead>
-              <tr>
-                <th scope="col">Data</th>
-                <th scope="col">Pagador</th>
-                <th scope="col">Recebedor</th>
-                <th scope="col">Valor</th>
-                <th scope="col" class="text-end">Acoes</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let receipt of receipts; trackBy: trackById">
-                <td>{{ receipt.issueDate }}</td>
-                <td>{{ receipt.payerName }}</td>
-                <td>{{ receipt.receiverName }}</td>
-                <td>{{ receipt.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
-                <td class="text-end">
-                  <div class="actions-cell">
-                    <button class="btn btn-outline-secondary btn-sm" type="button" (click)="editReceipt(receipt)">Editar</button>
-                    <button class="btn btn-outline-primary btn-sm" type="button" [disabled]="!receipt.id" (click)="preview(receipt.id, true)">Preview</button>
-                    <button class="btn btn-outline-danger btn-sm" type="button" (click)="remove(receipt.id)">Excluir</button>
-                  </div>
-                </td>
-              </tr>
-              <tr *ngIf="!receipts.length">
-                <td colspan="5" class="text-center text-secondary py-4">Nenhum recibo encontrado.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th scope="col">Data</th>
+              <th scope="col">Pagador</th>
+              <th scope="col">Recebedor</th>
+              <th scope="col">Valor</th>
+              <th scope="col">Layout</th>
+              <th scope="col" class="text-end">Acoes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let receipt of receipts; trackBy: trackById">
+              <td>{{ receipt.issueDate }}</td>
+              <td>{{ receipt.payerName }}</td>
+              <td>{{ receipt.receiverName }}</td>
+              <td>{{ receipt.amount | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+              <td>{{ templateLabel(receipt.template) }}</td>
+              <td class="text-end">
+                <div class="actions-cell">
+                  <button class="btn btn-outline-secondary btn-sm" type="button" (click)="editReceipt(receipt)">Editar</button>
+                  <button class="btn btn-outline-primary btn-sm" type="button" [disabled]="!receipt.id" (click)="preview(receipt.id, receipt.template ?? undefined, true)">Preview</button>
+                  <button class="btn btn-outline-danger btn-sm" type="button" (click)="remove(receipt.id)">Excluir</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="!receipts.length">
+              <td colspan="6" class="text-center text-secondary py-4">Nenhum recibo encontrado.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
+</section>
 
-  <div class="col-lg-5">
-    <div class="card app-card h-100">
-      <div class="card-body">
-        <p class="eyebrow mb-1">Formulario</p>
-        <h3 class="h4 mb-4">{{ receiptForm.id ? 'Editar recibo' : 'Novo recibo' }}</h3>
+<div *ngIf="modalOpen">
+  <div class="modal-backdrop fade show" (click)="closeModal()"></div>
+  <div class="modal d-block" tabindex="-1" aria-modal="true" role="dialog" (click)="closeModal()">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" (click)="$event.stopPropagation()">
+      <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-header border-bottom-0 bg-white">
+          <div>
+            <p class="eyebrow mb-1">Formulario</p>
+            <h3 class="modal-title h5 mb-0">{{ receiptForm.id ? 'Editar recibo' : 'Novo recibo' }}</h3>
+          </div>
+          <button type="button" class="btn-close" aria-label="Fechar" (click)="closeModal()"></button>
+        </div>
 
         <form (ngSubmit)="save()" #receiptFormRef="ngForm" novalidate>
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Tipo</label>
-              <select class="form-select select-strong" name="receiptType" [(ngModel)]="receiptForm.receiptType">
-                <option value="CREDITOR">Recebimento</option>
-                <option value="DEBTOR">Pagamento</option>
+          <div class="modal-body">
+            <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Tipo</label>
+                <select class="form-select select-strong" name="receiptType" [(ngModel)]="receiptForm.receiptType">
+                  <option value="CREDITOR">Recebimento</option>
+                  <option value="DEBTOR">Pagamento</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Valor</label>
+                <input
+                  class="form-control input-strong"
+                  name="amountInput"
+                  [(ngModel)]="amountInput"
+                  inputmode="numeric"
+                  type="text"
+                  (ngModelChange)="onAmountInputChange($event)"
+                />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Pagador</label>
+              <input class="form-control input-strong" name="payerName" [(ngModel)]="receiptForm.payerName" required />
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Doc pagador</label>
+                <input
+                  class="form-control input-strong"
+                  name="payerDocument"
+                  inputmode="numeric"
+                  [(ngModel)]="receiptForm.payerDocument"
+                  [appDocumentMask]="receiptForm.payerDocumentType"
+                  required
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Tipo doc pagador</label>
+                <select class="form-select select-strong" name="payerDocumentType" [(ngModel)]="receiptForm.payerDocumentType">
+                  <option value="CPF">CPF</option>
+                  <option value="CNPJ">CNPJ</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Valor por extenso</label>
+              <input class="form-control readonly-field" [value]="receiptForm.amountInWords" readonly />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Referente</label>
+              <input class="form-control input-strong" name="reference" [(ngModel)]="receiptForm.reference" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Observacoes</label>
+              <textarea class="form-control textarea-strong" name="notes" [(ngModel)]="receiptForm.notes" rows="3"></textarea>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Data emissao</label>
+                <input
+                  class="form-control input-strong"
+                  name="issueDate"
+                  [(ngModel)]="receiptForm.issueDate"
+                  type="date"
+                  (ngModelChange)="syncIssueDateText()"
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Data por extenso</label>
+                <input class="form-control readonly-field" [value]="receiptForm.issueDateText" readonly />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Local</label>
+              <input class="form-control input-strong" name="place" [(ngModel)]="receiptForm.place" required />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Recebedor</label>
+              <input class="form-control input-strong" name="receiverName" [(ngModel)]="receiptForm.receiverName" required />
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Doc recebedor</label>
+                <input
+                  class="form-control input-strong"
+                  name="receiverDocument"
+                  inputmode="numeric"
+                  [(ngModel)]="receiptForm.receiverDocument"
+                  [appDocumentMask]="receiptForm.receiverDocumentType"
+                  required
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Tipo doc recebedor</label>
+                <select class="form-select select-strong" name="receiverDocumentType" [(ngModel)]="receiptForm.receiverDocumentType">
+                  <option value="CPF">CPF</option>
+                  <option value="CNPJ">CNPJ</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Layout do recibo</label>
+              <select class="form-select select-strong" name="template" [(ngModel)]="receiptForm.template" (ngModelChange)="onTemplateChange()">
+                <option *ngFor="let option of templates" [value]="option.value">{{ option.label }}</option>
               </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Valor</label>
-              <input
-                class="form-control input-strong"
-                name="amountInput"
-                [(ngModel)]="amountInput"
-                inputmode="numeric"
-                type="text"
-                (ngModelChange)="onAmountInputChange($event)"
-              />
+              <small class="text-secondary d-block mt-1">{{ templateDescription(receiptForm.template) }}</small>
             </div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label">Pagador</label>
-            <input class="form-control input-strong" name="payerName" [(ngModel)]="receiptForm.payerName" required />
-          </div>
-
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Doc pagador</label>
-              <input class="form-control input-strong" name="payerDocument" [(ngModel)]="receiptForm.payerDocument" (ngModelChange)="applyPayerDocumentMask()" required />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Tipo doc pagador</label>
-              <select class="form-select select-strong" name="payerDocumentType" [(ngModel)]="receiptForm.payerDocumentType" (ngModelChange)="onPayerDocumentTypeChange()">
-                <option value="CPF">CPF</option>
-                <option value="CNPJ">CNPJ</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Valor por extenso</label>
-            <input class="form-control readonly-field" [value]="receiptForm.amountInWords" readonly />
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Referente</label>
-            <input class="form-control input-strong" name="reference" [(ngModel)]="receiptForm.reference" required />
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Observacoes</label>
-            <textarea class="form-control textarea-strong" name="notes" [(ngModel)]="receiptForm.notes" rows="3"></textarea>
-          </div>
-
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Data emissao</label>
-              <input
-                class="form-control input-strong"
-                name="issueDate"
-                [(ngModel)]="receiptForm.issueDate"
-                type="date"
-                (ngModelChange)="syncIssueDateText()"
-              />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Data por extenso</label>
-              <input class="form-control readonly-field" [value]="receiptForm.issueDateText" readonly />
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Local</label>
-            <input class="form-control input-strong" name="place" [(ngModel)]="receiptForm.place" required />
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Recebedor</label>
-            <input class="form-control input-strong" name="receiverName" [(ngModel)]="receiptForm.receiverName" required />
-          </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
-              <label class="form-label">Doc recebedor</label>
-              <input class="form-control input-strong" name="receiverDocument" [(ngModel)]="receiptForm.receiverDocument" (ngModelChange)="applyReceiverDocumentMask()" required />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Tipo doc recebedor</label>
-              <select class="form-select select-strong" name="receiverDocumentType" [(ngModel)]="receiptForm.receiverDocumentType" (ngModelChange)="onReceiverDocumentTypeChange()">
-                <option value="CPF">CPF</option>
-                <option value="CNPJ">CNPJ</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="d-flex gap-2 flex-wrap">
+          <div class="modal-footer border-top-0 bg-white">
             <button class="btn btn-dark rounded-pill" type="submit" [disabled]="loading">Salvar</button>
-            <button class="btn btn-outline-primary rounded-pill" type="button" [disabled]="!receiptForm.id" (click)="preview(receiptForm.id, true)">Ver preview</button>
-            <button class="btn btn-outline-secondary rounded-pill" type="button" (click)="reset()">Limpar</button>
+            <button class="btn btn-outline-primary rounded-pill" type="button" [disabled]="previewLoading" (click)="previewDraft()">Ver preview</button>
+            <button class="btn btn-outline-secondary rounded-pill" type="button" (click)="closeModal()">Cancelar</button>
           </div>
         </form>
       </div>
     </div>
   </div>
-</section>
+</div>
 
 <div *ngIf="previewOpen">
   <div class="modal-backdrop fade show" (click)="closePreview()"></div>
@@ -180,7 +217,7 @@
         <div class="modal-header border-bottom-0 bg-white">
           <div>
             <p class="eyebrow mb-1">Visualizacao</p>
-            <h3 class="modal-title h5 mb-0">Preview do recibo</h3>
+            <h3 class="modal-title h5 mb-0">Preview do recibo - {{ templateLabel(receiptForm.template) }}</h3>
           </div>
           <button type="button" class="btn-close" aria-label="Fechar" (click)="closePreview()"></button>
         </div>

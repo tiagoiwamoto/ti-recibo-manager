@@ -59,7 +59,14 @@ public class ReceiptRest {
     }
 
     @GetMapping(value = "/{id}/preview", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, String> preview(@PathVariable String id) {
-        return Map.of("html", receiptService.renderPreview(id));
+    public Map<String, String> preview(@PathVariable String id,
+                                       @RequestParam(required = false) String template) {
+        return Map.of("html", receiptService.renderPreview(id, template));
+    }
+
+    @PostMapping(value = "/preview", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, String> previewDraft(@RequestBody ReceiptRequest request,
+                                            @RequestParam(required = false) String template) {
+        return Map.of("html", receiptService.renderPreviewFromRequest(request, template));
     }
 }

@@ -29,8 +29,11 @@ create table if not exists receipts (
     issue_date_text text not null,
     receiver_name text not null,
     receiver_document text not null,
-    receiver_document_type text not null
+    receiver_document_type text not null,
+    template text not null default 'Moderno'
 );
+
+alter table receipts add column if not exists template text not null default 'Moderno';
 
 create table if not exists app_config (
     id integer primary key,
