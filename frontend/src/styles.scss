@@ -223,6 +223,34 @@ h3,
   background: #ffffff;
 }
 
+.receipt-preview-container {
+  width: 100%;
+  height: 72vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 20px;
+}
+
+.receipt-preview-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.receipt-preview-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.receipt-preview-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.receipt-preview-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
 @media (max-width: 991px) {
   .actions-cell {
     justify-content: flex-start;

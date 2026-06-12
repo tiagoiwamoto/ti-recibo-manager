@@ -2,6 +2,7 @@ package br.com.iwarecibos.api.entrypoint;
 
 import br.com.iwarecibos.api.core.domain.Receipt;
 import br.com.iwarecibos.api.core.usecase.ReceiptService;
+import br.com.iwarecibos.api.entrypoint.dto.ReceiptPreviewData;
 import br.com.iwarecibos.api.entrypoint.dto.ReceiptRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -59,14 +60,14 @@ public class ReceiptRest {
     }
 
     @GetMapping(value = "/{id}/preview", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, String> preview(@PathVariable String id,
+    public ReceiptPreviewData preview(@PathVariable String id,
                                        @RequestParam(required = false) String template) {
-        return Map.of("html", receiptService.renderPreview(id, template));
+        return receiptService.getPreviewData(id, template);
     }
 
     @PostMapping(value = "/preview", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, String> previewDraft(@RequestBody ReceiptRequest request,
+    public ReceiptPreviewData previewDraft(@RequestBody ReceiptRequest request,
                                             @RequestParam(required = false) String template) {
-        return Map.of("html", receiptService.renderPreviewFromRequest(request, template));
+        return receiptService.getPreviewDataFromRequest(request, template);
     }
 }

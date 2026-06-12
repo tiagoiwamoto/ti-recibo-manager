@@ -6,6 +6,8 @@ export type ReceiptTemplate =
   | 'SimplesDuplo'
   | 'Aurora'
   | 'Atlas'
+  | 'Padrao'
+  | 'Completo'
   | 'Horizonte';
 
 export interface ReceiptTemplateOption {
@@ -20,7 +22,9 @@ export const RECEIPT_TEMPLATES: ReceiptTemplateOption[] = [
   { value: 'SimplesDuplo', label: 'Simples duplo', description: 'Recibo enxuto com assinaturas de pagador e recebedor.' },
   { value: 'Aurora', label: 'Aurora', description: 'Visual editorial com destaque para valor e bloco de assinaturas elegante.' },
   { value: 'Atlas', label: 'Atlas', description: 'Composicao executiva com grade de dados e assinaturas separadas por fluxo.' },
-  { value: 'Horizonte', label: 'Horizonte', description: 'Layout contemporaneo com faixa superior e assinaturas amplas no rodape.' }
+  { value: 'Horizonte', label: 'Horizonte', description: 'Layout contemporaneo com faixa superior e assinaturas amplas no rodape.' },
+  { value: 'Padrao', label: 'Padrão', description: 'Composicao executiva com grade de dados e assinaturas separadas por fluxo.' },
+  { value: 'Completo', label: 'Completo', description: 'Layout contemporaneo com faixa superior e assinaturas amplas no rodape.' }
 ];
 
 export interface DashboardSummary {
@@ -111,6 +115,28 @@ export interface AppConfig {
 }
 
 export interface ReceiptPreviewResponse {
-  html: string;
+  id: string;
+  receiptType: ReceiptType;
+  amount: number;
+  formattedAmount: string;
+  payerName: string;
+  payerDocument: string;
+  formattedPayerDocument: string;
+  payerDocumentType: DocumentType;
+  amountInWords: string;
+  reference: string;
+  notes: string | null;
+  issueDate: string;
+  formattedIssueDate: string;
+  place: string;
+  issueDateText: string;
+  receiverName: string;
+  receiverDocument: string;
+  formattedReceiverDocument: string;
+  receiverDocumentType: DocumentType;
+  template: ReceiptTemplate;
+  issuerName: string;
+  issuerDocument: string;
+  issuerCity: string;
 }
 

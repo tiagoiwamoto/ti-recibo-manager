@@ -5,6 +5,7 @@ import br.com.iwarecibos.api.core.domain.DocumentType;
 import br.com.iwarecibos.api.core.domain.Receipt;
 import br.com.iwarecibos.api.core.entity.ReceiptJpaEntity;
 import br.com.iwarecibos.api.core.repository.SpringDataReceiptRepository;
+import br.com.iwarecibos.api.entrypoint.dto.ReceiptPreviewData;
 import br.com.iwarecibos.api.entrypoint.dto.ReceiptRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -77,6 +78,26 @@ public class ReceiptService {
         return render(receipt, template);
     }
 
+    public ReceiptPreviewData getPreviewData(String id) {
+        return getPreviewData(id, null);
+    }
+
+    public ReceiptPreviewData getPreviewData(String id, String templateOverride) {
+        Receipt receipt = get(id);
+        String template = (templateOverride != null && !templateOverride.isBlank())
+                ? templateOverride
+                : receipt.template();
+        return buildPreviewData(receipt, template);
+    }
+
+    public ReceiptPreviewData getPreviewDataFromRequest(ReceiptRequest request, String templateOverride) {
+        Receipt receipt = transientReceipt(request);
+        String template = (templateOverride != null && !templateOverride.isBlank())
+                ? templateOverride
+                : request.template();
+        return buildPreviewData(receipt, template);
+    }
+
     private Receipt transientReceipt(ReceiptRequest request) {
         LocalDate issueDate = parseDateOrNow(request.issueDate());
         BigDecimal amount = request.amount() == null
@@ -103,6 +124,40 @@ public class ReceiptService {
         );
     }
 
+    private ReceiptPreviewData buildPreviewData(Receipt receipt, String template) {
+        var config = appPreferenceUsecase.get();
+        String valorFormatado = formatCurrency(receipt.amount());
+        String dataFormatada = formatDate(receipt.issueDate());
+        String docPagador = formatDocument(receipt.payerDocument(), receipt.payerDocumentType().name());
+        String docRecebedor = formatDocument(receipt.receiverDocument(), receipt.receiverDocumentType().name());
+
+        return new ReceiptPreviewData(
+                receipt.id(),
+                receipt.receiptType(),
+                receipt.amount(),
+                valorFormatado,
+                receipt.payerName(),
+                receipt.payerDocument(),
+                docPagador,
+                receipt.payerDocumentType(),
+                receipt.amountInWords(),
+                receipt.reference(),
+                receipt.notes(),
+                receipt.issueDate().toString(),
+                dataFormatada,
+                receipt.place(),
+                receipt.issueDateText(),
+                receipt.receiverName(),
+                receipt.receiverDocument(),
+                docRecebedor,
+                receipt.receiverDocumentType(),
+                template,
+                config.issuerName(),
+                config.issuerDocument(),
+                config.city()
+        );
+    }
+
     private String render(Receipt receipt, String template) {
         var config = appPreferenceUsecase.get();
         String valorFormatado = formatCurrency(receipt.amount());
@@ -111,13 +166,285 @@ public class ReceiptService {
         String docRecebedor = formatDocument(receipt.receiverDocument(), receipt.receiverDocumentType().name());
 
         return switch (resolveTemplate(template)) {
-            case "Simples" -> renderSimples(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor, false);
-            case "SimplesDuplo" -> renderSimples(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor, true);
-            case "Aurora" -> renderAurora(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor);
-            case "Atlas" -> renderAtlas(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor);
-            case "Horizonte" -> renderHorizonte(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor);
-            default -> renderModerno(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor);
+            case "Padrao" -> renderReciboPadrao(receipt, valorFormatado, dataFormatada, docPagador, docRecebedor);
+            case "Completo" -> renderReciboCompleto(receipt, config, valorFormatado, dataFormatada, docPagador, docRecebedor);
+            default -> renderReciboPadrao(receipt, valorFormatado, dataFormatada, docPagador, docRecebedor);
         };
+    }
+
+    private String renderReciboPadrao(Receipt receipt, String valorFormatado,
+                                      String dataFormatada, String docPagador, String docRecebedor){
+        return """
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <title>Recibo</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background: #f5f5f5;
+                        padding: 20px;
+                    }
+            
+                    .recibo {
+                        background: #fff;
+                        max-width: 600px;
+                        margin: auto;
+                        padding: 20px;
+                        border: 1px solid #ddd;
+                        border-radius: 8px;
+                    }
+            
+                    .header {
+                        text-align: center;
+                        margin-bottom: 20px;
+                    }
+            
+                    .header h1 {
+                        margin: 0;
+                    }
+            
+                    .info {
+                        margin-bottom: 10px;
+                    }
+            
+                    .info strong {
+                        display: inline-block;
+                        width: 120px;
+                    }
+            
+                    .descricao {
+                        margin: 20px 0;
+                        line-height: 1.5;
+                    }
+            
+                    .valor {
+                        font-size: 20px;
+                        font-weight: bold;
+                        text-align: right;
+                        margin-top: 20px;
+                    }
+            
+                    .assinatura {
+                        margin-top: 40px;
+                        text-align: center;
+                    }
+            
+                    .linha {
+                        border-top: 1px solid #000;
+                        width: 200px;
+                        margin: 10px auto;
+                    }
+            
+                    @media print {
+                        body {
+                            background: white;
+                        }
+                        .recibo {
+                            border: none;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+            
+            <div class="recibo">
+                <div class="header">
+                    <h1>RECIBO - %s</h1>
+                </div>
+            
+                <div class="info">
+                    <p><strong>Data:</strong> %s</p>
+                    <p><strong>Recebido de:</strong> %s</p>
+                    <p><strong>CPF/CNPJ:</strong> %s</p>
+                </div>
+            
+                <div class="descricao">
+                    Recebi a quantia de <strong>R$ %s</strong> (%s),
+                    referente a %s.
+                </div>
+            
+                <div class="valor">
+                    Total: R$ %s
+                </div>
+            
+                <div class="assinatura">
+                    <div class="linha"></div>
+                    <p>%s - %s</p>
+                </div>
+                <div class="assinatura">
+                    <div class="linha"></div>
+                    <p>%s - %s</p>
+                </div>
+            </div>
+            
+            </body>
+            </html>
+            """.formatted(
+                escape(receipt.id()),
+                escape(dataFormatada),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(valorFormatado),
+                escape(receipt.amountInWords()),
+                escape(receipt.reference()),
+                escape(valorFormatado),
+                escape(receipt.receiverName()),
+                escape(docRecebedor),
+                escape(receipt.payerName()),
+                escape(docPagador)
+        );
+    }
+
+    private String renderReciboCompleto(Receipt receipt, AppPreference config, String valorFormatado,
+                                      String dataFormatada, String docPagador, String docRecebedor){
+        return """
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <title>Recibo</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 20px;
+                        color: #000;
+                    }
+                    .container {
+                        border: 1px solid #000;
+                        padding: 15px;
+                    }
+                    .header, .section {
+                        margin-bottom: 15px;
+                    }
+                    .title {
+                        text-align: center;
+                        font-weight: bold;
+                        font-size: 20px;
+                        margin-bottom: 10px;
+                    }
+                    .row {
+                        display: flex;
+                        justify-content: space-between;
+                    }
+                    .box {
+                        width: 48%;
+                        border: 1px solid #000;
+                        padding: 8px;
+                        font-size: 12px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 12px;
+                    }
+                    table, th, td {
+                        border: 1px solid #000;
+                    }
+                    th, td {
+                        padding: 5px;
+                        text-align: center;
+                    }
+                    .totals {
+                        text-align: right;
+                        margin-top: 10px;
+                        font-size: 13px;
+                    }
+                    .footer {
+                        margin-top: 20px;
+                        font-size: 11px;
+                    }
+                </style>
+            </head>
+            <body>
+            
+            <div class="container">
+                <div class="title">RECIBO - %s</div>
+            
+                <div class="header row">
+                    <div class="box">
+                        <strong>Emitente</strong><br>
+                        %s<br>
+                        DOCUMENTO: %s<br>
+                        %s<br>
+                        %s - %s
+                    </div>
+            
+                    <div class="box">
+                        <strong>Dados da Nota</strong><br>
+                        Nº: %s<br>
+                        Série: 1<br>
+                        Emissão: %s<br>
+                        Saída: %s
+                    </div>
+                </div>
+            
+                <div class="section box">
+                    <strong>Destinatário</strong><br>
+                    %s<br>
+                    DOCUMENTO: %s<br>
+                    %s<br>
+                    %s - %s
+                </div>
+            
+                <div class="section">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Descrição</th>
+                            <th>Qtd</th>
+                            <th>Valor Unitário (R$)</th>
+                            <th>Valor Total (R$)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>001</td>
+                            <td>%s</td>
+                            <td>1</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            
+                <div class="totals">
+                    Valor dos Produtos: R$ %s<br>
+                    Frete: R$ 0,00<br>
+                    Desconto: R$ 0,00<br>
+                    <strong>Total da Nota: R$ %s</strong>
+                </div>
+            
+                <div class="footer">
+                    Forma de pagamento: A VISTA<br>
+                    Documento apenas para demonstração.
+                </div>
+            </div>
+            
+            </body>
+            </html>
+            """.formatted(
+                escape(receipt.id()),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(receipt.place()),
+                escape(receipt.place()),
+                escape(receipt.id()),
+                escape(dataFormatada),
+                escape(dataFormatada),
+                escape(receipt.payerName()),
+                escape(docPagador),
+                escape(receipt.place()),
+                escape(receipt.place()),
+                escape(receipt.reference()),
+                escape(valorFormatado),
+                escape(valorFormatado),
+                escape(valorFormatado),
+                escape(valorFormatado)
+        );
     }
 
     private String renderModerno(Receipt receipt, AppPreference config, String valorFormatado,

@@ -34,7 +34,7 @@ export class SettingsPageComponent implements OnInit {
       issuerDocumentType: 'CPF',
       city: '',
       logoPath: '',
-      receiptTemplate: 'Moderno'
+      receiptTemplate: 'Padrao'
     };
   }
 

@@ -222,7 +222,8 @@
           <button type="button" class="btn-close" aria-label="Fechar" (click)="closePreview()"></button>
         </div>
         <div class="modal-body bg-light p-3">
-          <iframe #previewFrame class="receipt-iframe" [attr.srcdoc]="previewHtml"></iframe>
+          <!-- Use innerHTML with SafeHtml to render the receipt template -->
+          <div class="receipt-preview-container" [innerHTML]="previewHtml"></div>
         </div>
         <div class="modal-footer border-top-0 bg-white">
           <button class="btn btn-dark rounded-pill" type="button" (click)="printPreview()">Imprimir recibo</button>

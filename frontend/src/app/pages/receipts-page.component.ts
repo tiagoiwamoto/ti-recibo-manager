@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
+import { DomSanitizer } from '@angular/platform-browser';
 import { ApiService } from '../core/api.service';
-import { Receipt, ReceiptForm, ReceiptTemplate, RECEIPT_TEMPLATES } from '../core/models';
+import { Receipt, ReceiptForm, ReceiptPreviewResponse, ReceiptTemplate, RECEIPT_TEMPLATES } from '../core/models';
 import { amountToWords, dateToWords } from '../core/receipt-utils';
 import { formatByDocumentType } from '../core/document-mask';
 import { DocumentMaskDirective } from '../core/document-mask.directive';
+import { ReceiptTemplateService } from '../core/receipt-template.service';
 
 @Component({
   selector: 'app-receipts-page',
@@ -15,8 +17,6 @@ import { DocumentMaskDirective } from '../core/document-mask.directive';
   templateUrl: './receipts-page.component.html'
 })
 export class ReceiptsPageComponent implements OnInit {
-  @ViewChild('previewFrame') previewFrame?: ElementRef<HTMLIFrameElement>;
-
   readonly templates = RECEIPT_TEMPLATES;
 
   receipts: Receipt[] = [];
@@ -26,11 +26,11 @@ export class ReceiptsPageComponent implements OnInit {
   modalOpen = false;
   previewOpen = false;
   previewLoading = false;
-  previewHtml = '';
+  previewHtml: any = '';
   receiptForm: ReceiptForm = this.emptyForm();
   amountInput = '';
 
-  constructor(private readonly api: ApiService) {}
+  constructor(private readonly api: ApiService, private readonly templateService: ReceiptTemplateService, private readonly sanitizer: DomSanitizer) {}
 
   ngOnInit(): void {
     this.amountInput = this.formatCurrencyFromNumber(this.receiptForm.amount);
@@ -54,7 +54,7 @@ export class ReceiptsPageComponent implements OnInit {
       receiverName: '',
       receiverDocument: '',
       receiverDocumentType: 'CPF',
-      template: 'Moderno'
+      template: 'Padrao'
     };
   }
 
@@ -138,7 +138,8 @@ export class ReceiptsPageComponent implements OnInit {
     this.previewLoading = true;
     try {
       const response = await firstValueFrom(this.api.previewReceipt(id, template));
-      this.previewHtml = response.html;
+      const html = this.templateService.renderReceipt(response);
+      this.previewHtml = this.sanitizer.bypassSecurityTrustHtml(html);
       if (openModal) {
         this.previewOpen = true;
       }
@@ -156,7 +157,8 @@ export class ReceiptsPageComponent implements OnInit {
       const response = await firstValueFrom(
         this.api.previewReceiptDraft(this.buildPayload(), this.receiptForm.template)
       );
-      this.previewHtml = response.html;
+      const html = this.templateService.renderReceipt(response);
+      this.previewHtml = this.sanitizer.bypassSecurityTrustHtml(html);
       if (openModal) {
         this.previewOpen = true;
       }
@@ -178,7 +180,16 @@ export class ReceiptsPageComponent implements OnInit {
   }
 
   printPreview(): void {
-    this.previewFrame?.nativeElement.contentWindow?.print();
+    const htmlContent = typeof this.previewHtml === 'string' ? this.previewHtml : (this.previewHtml?.changingThisBreaksApplicationSecurity || '');
+    const printWindow = window.open('', '_blank');
+    if (printWindow && htmlContent) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    }
   }
 
   syncAmountInWords(): void {
@@ -200,7 +211,7 @@ export class ReceiptsPageComponent implements OnInit {
   }
 
   templateLabel(value: ReceiptTemplate | null | undefined): string {
-    return this.templates.find((option) => option.value === value)?.label ?? 'Moderno';
+    return this.templates.find((option) => option.value === value)?.label ?? 'Padrao';
   }
 
   templateDescription(value: ReceiptTemplate | null | undefined): string {
@@ -230,7 +241,7 @@ export class ReceiptsPageComponent implements OnInit {
       receiverName: receipt.receiverName ?? '',
       receiverDocument: receipt.receiverDocument ?? '',
       receiverDocumentType: receipt.receiverDocumentType ?? 'CPF',
-      template: receipt.template ?? 'Moderno'
+      template: receipt.template ?? 'Padrao'
     };
   }
 
