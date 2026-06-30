@@ -11,18 +11,18 @@
         <button
           type="button"
           class="btn btn-primary btn-lg"
-          (click)="loginWithKeycloak()"
+          (click)="loginWithAuthentik()"
           [disabled]="loading">
           @if (loading) {
             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
           }
-          Entrar com Keycloak
+          Entrar com Authentik
         </button>
       </div>
 
       <div class="text-center mt-4">
         <small class="text-secondary">
-          Voce sera redirecionado para o Keycloak para autenticacao.
+          Voce sera redirecionado para o Authentik para autenticacao.
         </small>
       </div>
     </div>

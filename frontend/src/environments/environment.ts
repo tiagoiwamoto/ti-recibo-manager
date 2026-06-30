@@ -1,9 +1,11 @@
 export const environment = {
   production: true,
   apiBaseUrl: '/api/v1',
-  keycloak: {
-    url: 'https://keycloak.kamehouse.com.br',
-    realm: 'tirecibomanager',
-    clientId: 'tirecibomanager-frontend'
+  oidc: {
+    authority: 'https://auth.kamehouse.com.br/application/o/tirecibomanager/',
+    clientId: 'CHANGE_ME_AUTHENTIK_CLIENT_ID',
+    redirectUri: typeof window !== 'undefined' ? window.location.origin + '/' : 'https://recibos.kamehouse.com.br/',
+    postLogoutRedirectUri: typeof window !== 'undefined' ? window.location.origin + '/' : 'https://recibos.kamehouse.com.br/',
+    scopes: 'openid profile email'
   }
 };

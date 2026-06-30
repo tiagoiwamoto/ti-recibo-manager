@@ -20,18 +20,18 @@ import java.util.List;
 /**
  * Servlet (Spring MVC) security configuration. The API behaves as an OAuth2
  * Resource Server: every request to {@code /api/**} must carry a valid JWT
- * issued by Keycloak. Roles are mapped by {@link KeycloakJwtAuthenticationConverter}.
+ * issued by Authentik. Roles are mapped by {@link OidcJwtAuthenticationConverter}.
  */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final KeycloakJwtAuthenticationConverter jwtAuthenticationConverter;
+    private final OidcJwtAuthenticationConverter jwtAuthenticationConverter;
 
     @Value("${app.frontend.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*}")
     private String allowedOriginPatterns;
 
-    public SecurityConfig(KeycloakJwtAuthenticationConverter jwtAuthenticationConverter) {
+    public SecurityConfig(OidcJwtAuthenticationConverter jwtAuthenticationConverter) {
         this.jwtAuthenticationConverter = jwtAuthenticationConverter;
     }
 

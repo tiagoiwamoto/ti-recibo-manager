@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import Keycloak from 'keycloak-js';
+import { User, UserManager, UserManagerSettings, WebStorageStateStore } from 'oidc-client-ts';
 import { environment } from '../../environments/environment';
 
 export interface AuthUser {
@@ -14,7 +14,7 @@ export interface AuthUser {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private keycloak: Keycloak | null = null;
+  private userManager: UserManager;
   private initialized = false;
   private initializationPromise: Promise<void> | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -25,6 +25,36 @@ export class AuthService {
   readonly isLoggedIn$ = this.loggedIn.asObservable();
   readonly currentUser$ = this.currentUser.asObservable();
 
+  constructor() {
+    const settings: UserManagerSettings = {
+      authority: environment.oidc.authority,
+      client_id: environment.oidc.clientId,
+      redirect_uri: environment.oidc.redirectUri,
+      post_logout_redirect_uri: environment.oidc.postLogoutRedirectUri,
+      response_type: 'code',
+      scope: environment.oidc.scopes,
+      userStore: new WebStorageStateStore({ store: window.localStorage }),
+      automaticSilentRenew: true,
+      includeIdTokenInSilentRenew: true,
+      monitorSession: true
+    };
+    this.userManager = new UserManager(settings);
+
+    this.userManager.events.addUserLoaded((user) => {
+      this.persistUser(user);
+      this.syncCurrentUser();
+      this.startTokenRefresh();
+    });
+
+    this.userManager.events.addUserUnloaded(() => {
+      this.clearSession();
+    });
+
+    this.userManager.events.addAccessTokenExpired(() => {
+      this.refreshToken();
+    });
+  }
+
   async initializeAuth(): Promise<void> {
     if (this.initialized) {
       return;
@@ -34,36 +64,34 @@ export class AuthService {
     }
 
     this.initializationPromise = (async () => {
-      this.keycloak = new Keycloak({
-        url: environment.keycloak.url,
-        realm: environment.keycloak.realm,
-        clientId: environment.keycloak.clientId
-      });
-
       try {
-        const authenticated = await this.keycloak.init({
-          onLoad: undefined,
-          pkceMethod: 'S256',
-          checkLoginIframe: false,
-          redirectUri: window.location.href,
-          responseMode: 'query',
-          token: localStorage.getItem('token') || undefined,
-          refreshToken: localStorage.getItem('refreshToken') || undefined
-        });
-
-        this.initialized = true;
-
-        if (authenticated && this.keycloak.token) {
-          this.storeTokens();
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('code') && url.searchParams.has('state')) {
+          const user = await this.userManager.signinRedirectCallback();
+          this.persistUser(user);
+          window.history.replaceState({}, document.title, '/');
+          this.initialized = true;
           this.syncCurrentUser();
           this.loggedIn.next(true);
           this.startTokenRefresh();
           return;
         }
 
-        this.loggedIn.next(!!localStorage.getItem('token'));
+        const user = await this.userManager.getUser();
+
+        if (user && user.access_token && !user.expired) {
+          this.persistUser(user);
+          this.syncCurrentUser();
+          this.loggedIn.next(true);
+          this.startTokenRefresh();
+        } else {
+          const localToken = localStorage.getItem('token');
+          this.loggedIn.next(!!localToken);
+        }
+
+        this.initialized = true;
       } catch (error) {
-        console.error('AuthService: Keycloak initialization failed', error);
+        console.error('AuthService: OIDC initialization failed', error);
         this.initialized = true;
       } finally {
         this.initializationPromise = null;
@@ -74,36 +102,38 @@ export class AuthService {
   }
 
   async login(): Promise<void> {
-    if (!this.keycloak) {
-      await this.initializeAuth();
-    }
-    await this.keycloak?.login({ redirectUri: window.location.origin + '/' });
+    await this.userManager.signinRedirect();
   }
 
   async logout(): Promise<void> {
     this.stopTokenRefresh();
-    try {
-      await this.keycloak?.logout({ redirectUri: window.location.origin + '/login' });
-    } catch (error) {
-      console.error('AuthService: logout error', error);
+    const user = await this.userManager.getUser();
+    if (user) {
+      try {
+        await this.userManager.signoutRedirect();
+        return;
+      } catch (error) {
+        console.error('AuthService: logout error', error);
+      }
     }
     this.clearSession();
+    window.location.href = '/login';
   }
 
   getToken(): string | null {
-    return this.keycloak?.token ?? localStorage.getItem('token');
+    return localStorage.getItem('token');
   }
 
   async refreshToken(): Promise<boolean> {
-    if (!this.keycloak) {
-      return false;
-    }
     try {
-      const refreshed = await this.keycloak.updateToken(30);
-      if (refreshed) {
-        this.storeTokens();
+      const user = await this.userManager.signinSilent();
+      if (user) {
+        this.persistUser(user);
+        this.syncCurrentUser();
+        return true;
       }
-      return true;
+      this.clearSession();
+      return false;
     } catch (error) {
       console.error('AuthService: token refresh failed', error);
       this.clearSession();
@@ -127,52 +157,66 @@ export class AuthService {
     return this.hasRole('admin');
   }
 
-  private storeTokens(): void {
-    if (this.keycloak?.token) {
-      localStorage.setItem('token', this.keycloak.token);
+  private persistUser(user: User | null): void {
+    if (!user?.access_token) {
+      return;
     }
-    if (this.keycloak?.refreshToken) {
-      localStorage.setItem('refreshToken', this.keycloak.refreshToken);
+    localStorage.setItem('token', user.access_token);
+    if (user.refresh_token) {
+      localStorage.setItem('refreshToken', user.refresh_token);
     }
   }
 
   private syncCurrentUser(): void {
-    const token = this.keycloak?.tokenParsed as Record<string, unknown> | undefined;
+    const token = this.getToken();
     if (!token) {
       this.currentUser.next(null);
       return;
     }
-    this.currentUser.next({
-      id: token['sub'] as string,
-      username: token['preferred_username'] as string,
-      email: token['email'] as string,
-      firstName: token['given_name'] as string,
-      lastName: token['family_name'] as string,
-      roles: this.extractRoles(token)
-    });
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      this.currentUser.next({
+        id: payload['sub'],
+        username: payload['preferred_username'],
+        email: payload['email'],
+        firstName: payload['given_name'],
+        lastName: payload['family_name'],
+        roles: this.extractRoles(payload)
+      });
+    } catch (error) {
+      this.currentUser.next(null);
+    }
   }
 
   private extractRoles(token: Record<string, unknown>): string[] {
-    const resourceAccess = (token['resource_access'] as Record<string, { roles?: string[] }>) || {};
-    const realmAccess = (token['realm_access'] as { roles?: string[] }) || {};
-    const clientRoles = resourceAccess[environment.keycloak.clientId]?.roles || [];
-    const realmRoles = realmAccess.roles || [];
-    return [...clientRoles, ...realmRoles];
+    const groups = (token['groups'] as string[]) || [];
+    const roles = (token['roles'] as string[]) || [];
+    return [...groups, ...roles];
   }
 
   private startTokenRefresh(): void {
     this.stopTokenRefresh();
-    const exp = this.keycloak?.tokenParsed?.exp;
-    if (!exp) {
+    const token = this.getToken();
+    if (!token) {
       return;
     }
-    const timeUntilExpiry = exp * 1000 - Date.now();
-    const refreshTime = Math.max(timeUntilExpiry - 30000, 5000);
-    this.refreshTimer = setTimeout(async () => {
-      if (await this.refreshToken()) {
-        this.startTokenRefresh();
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (!payload.exp) {
+        return;
       }
-    }, refreshTime);
+      const timeUntilExpiry = payload.exp * 1000 - Date.now();
+      const refreshTime = Math.max(timeUntilExpiry - 30000, 5000);
+      this.refreshTimer = setTimeout(async () => {
+        if (await this.refreshToken()) {
+          this.startTokenRefresh();
+        }
+      }, refreshTime);
+    } catch (error) {
+      console.error('AuthService: Failed to parse token for refresh scheduling', error);
+    }
   }
 
   private stopTokenRefresh(): void {

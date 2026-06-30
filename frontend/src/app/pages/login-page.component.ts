@@ -24,7 +24,7 @@ export class LoginPageComponent implements OnInit {
     }
   }
 
-  async loginWithKeycloak(): Promise<void> {
+  async loginWithAuthentik(): Promise<void> {
     this.loading = true;
     try {
       await this.authService.login();
