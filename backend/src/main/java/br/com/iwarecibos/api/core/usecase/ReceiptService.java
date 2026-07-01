@@ -1,6 +1,7 @@
 package br.com.iwarecibos.api.core.usecase;
 
 import br.com.iwarecibos.api.core.domain.AppPreference;
+import br.com.iwarecibos.api.core.domain.Client;
 import br.com.iwarecibos.api.core.domain.DocumentType;
 import br.com.iwarecibos.api.core.domain.Receipt;
 import br.com.iwarecibos.api.core.entity.ReceiptJpaEntity;
@@ -26,6 +27,7 @@ public class ReceiptService {
 
     private final SpringDataReceiptRepository receiptRepository;
     private final AppPreferenceUsecase appPreferenceUsecase;
+    private final ClientService clientService;
 
     public List<Receipt> list(String q) {
         List<ReceiptJpaEntity> entities = q == null || q.isBlank()
@@ -103,23 +105,25 @@ public class ReceiptService {
         BigDecimal amount = request.amount() == null
                 ? BigDecimal.ZERO
                 : request.amount().setScale(2, RoundingMode.HALF_UP);
+        PayerReceiver payer = resolvePayer(request);
+        PayerReceiver receiver = resolveReceiver(request);
 
         return new Receipt(
                 "PREVIEW",
                 request.receiptType(),
                 amount,
-                nz(request.payerName()),
-                nz(request.payerDocument()),
-                request.payerDocumentType() == null ? DocumentType.CPF : request.payerDocumentType(),
+                nz(payer.name()),
+                nz(payer.document()),
+                payer.documentType() == null ? DocumentType.CPF : payer.documentType(),
                 resolveAmountInWords(amount, request.amountInWords()),
                 nz(request.reference()),
                 blankToNull(request.notes()),
                 issueDate,
                 nz(request.place()),
                 resolveIssueDateText(issueDate, request.issueDateText()),
-                nz(request.receiverName()),
-                nz(request.receiverDocument()),
-                request.receiverDocumentType() == null ? DocumentType.CPF : request.receiverDocumentType(),
+                nz(receiver.name()),
+                nz(receiver.document()),
+                receiver.documentType() == null ? DocumentType.CPF : receiver.documentType(),
                 resolveTemplate(request.template())
         );
     }
@@ -1038,26 +1042,55 @@ public class ReceiptService {
         return digits;
     }
 
+    private record PayerReceiver(String name, String document, DocumentType documentType) {
+    }
+
+    private PayerReceiver resolvePayer(ReceiptRequest request) {
+        if (request.payerClientId() != null && !request.payerClientId().isBlank()) {
+            Client client = clientService.get(request.payerClientId());
+            return new PayerReceiver(client.name(), client.document(), client.documentType());
+        }
+        return new PayerReceiver(
+                request.payerName(),
+                request.payerDocument(),
+                request.payerDocumentType()
+        );
+    }
+
+    private PayerReceiver resolveReceiver(ReceiptRequest request) {
+        if (request.receiverClientId() != null && !request.receiverClientId().isBlank()) {
+            Client client = clientService.get(request.receiverClientId());
+            return new PayerReceiver(client.name(), client.document(), client.documentType());
+        }
+        return new PayerReceiver(
+                request.receiverName(),
+                request.receiverDocument(),
+                request.receiverDocumentType()
+        );
+    }
+
     private ReceiptJpaEntity toEntity(String id, ReceiptRequest request) {
         LocalDate issueDate = LocalDate.parse(request.issueDate());
         BigDecimal amount = request.amount().setScale(2, RoundingMode.HALF_UP);
+        PayerReceiver payer = resolvePayer(request);
+        PayerReceiver receiver = resolveReceiver(request);
 
         return new ReceiptJpaEntity(
                 id,
                 request.receiptType(),
                 amount,
-                request.payerName().trim(),
-                sanitizeDocument(request.payerDocument()),
-                request.payerDocumentType(),
+                payer.name().trim(),
+                sanitizeDocument(payer.document()),
+                payer.documentType(),
                 resolveAmountInWords(amount, request.amountInWords()),
                 request.reference().trim(),
                 blankToNull(request.notes()),
                 request.issueDate(),
                 request.place().trim(),
                 resolveIssueDateText(issueDate, request.issueDateText()),
-                request.receiverName().trim(),
-                sanitizeDocument(request.receiverDocument()),
-                request.receiverDocumentType(),
+                receiver.name().trim(),
+                sanitizeDocument(receiver.document()),
+                receiver.documentType(),
                 resolveTemplate(request.template())
         );
     }

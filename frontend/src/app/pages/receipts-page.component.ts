@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ApiService } from '../core/api.service';
-import { Receipt, ReceiptForm, ReceiptPreviewResponse, ReceiptTemplate, RECEIPT_TEMPLATES } from '../core/models';
+import { Client, Receipt, ReceiptForm, ReceiptPreviewResponse, ReceiptTemplate, RECEIPT_TEMPLATES } from '../core/models';
 import { amountToWords, dateToWords } from '../core/receipt-utils';
 import { formatByDocumentType } from '../core/document-mask';
 import { DocumentMaskDirective } from '../core/document-mask.directive';
@@ -20,6 +20,7 @@ export class ReceiptsPageComponent implements OnInit {
   readonly templates = RECEIPT_TEMPLATES;
 
   receipts: Receipt[] = [];
+  clients: Client[] = [];
   search = '';
   loading = false;
   error = '';
@@ -35,6 +36,7 @@ export class ReceiptsPageComponent implements OnInit {
   ngOnInit(): void {
     this.amountInput = this.formatCurrencyFromNumber(this.receiptForm.amount);
     void this.load();
+    void this.loadClients();
   }
 
   emptyForm(): ReceiptForm {
@@ -45,6 +47,7 @@ export class ReceiptsPageComponent implements OnInit {
       payerName: '',
       payerDocument: '',
       payerDocumentType: 'CPF',
+      payerClientId: null,
       amountInWords: '',
       reference: '',
       notes: '',
@@ -54,6 +57,7 @@ export class ReceiptsPageComponent implements OnInit {
       receiverName: '',
       receiverDocument: '',
       receiverDocumentType: 'CPF',
+      receiverClientId: null,
       template: 'Padrao'
     };
   }
@@ -88,6 +92,14 @@ export class ReceiptsPageComponent implements OnInit {
       this.error = this.describeError(error);
     } finally {
       this.loading = false;
+    }
+  }
+
+  async loadClients(): Promise<void> {
+    try {
+      this.clients = await firstValueFrom(this.api.listClients());
+    } catch (error) {
+      this.error = this.describeError(error);
     }
   }
 
@@ -175,6 +187,38 @@ export class ReceiptsPageComponent implements OnInit {
     }
   }
 
+  onPayerClientChange(clientId: string | null): void {
+    this.receiptForm.payerClientId = clientId;
+    if (clientId) {
+      const client = this.clients.find((c) => c.id === clientId);
+      if (client) {
+        this.receiptForm.payerName = client.name;
+        this.receiptForm.payerDocument = formatByDocumentType(client.document, client.documentType);
+        this.receiptForm.payerDocumentType = client.documentType;
+      }
+    }
+  }
+
+  onReceiverClientChange(clientId: string | null): void {
+    this.receiptForm.receiverClientId = clientId;
+    if (clientId) {
+      const client = this.clients.find((c) => c.id === clientId);
+      if (client) {
+        this.receiptForm.receiverName = client.name;
+        this.receiptForm.receiverDocument = formatByDocumentType(client.document, client.documentType);
+        this.receiptForm.receiverDocumentType = client.documentType;
+      }
+    }
+  }
+
+  onPayerManualFocus(): void {
+    this.receiptForm.payerClientId = null;
+  }
+
+  onReceiverManualFocus(): void {
+    this.receiptForm.receiverClientId = null;
+  }
+
   closePreview(): void {
     this.previewOpen = false;
   }
@@ -218,6 +262,10 @@ export class ReceiptsPageComponent implements OnInit {
     return this.templates.find((option) => option.value === value)?.description ?? '';
   }
 
+  clientLabel(client: Client): string {
+    return `${client.name} - ${formatByDocumentType(client.document, client.documentType)}`;
+  }
+
   private buildPayload(): ReceiptForm {
     this.receiptForm.amount = this.parseCurrencyToNumber(this.amountInput);
     const { id, ...payload } = this.receiptForm;
@@ -232,6 +280,7 @@ export class ReceiptsPageComponent implements OnInit {
       payerName: receipt.payerName ?? '',
       payerDocument: receipt.payerDocument ?? '',
       payerDocumentType: receipt.payerDocumentType ?? 'CPF',
+      payerClientId: receipt.payerClientId ?? null,
       amountInWords: receipt.amountInWords ?? amountToWords(receipt.amount),
       reference: receipt.reference ?? '',
       notes: receipt.notes ?? '',
@@ -241,6 +290,7 @@ export class ReceiptsPageComponent implements OnInit {
       receiverName: receipt.receiverName ?? '',
       receiverDocument: receipt.receiverDocument ?? '',
       receiverDocumentType: receipt.receiverDocumentType ?? 'CPF',
+      receiverClientId: receipt.receiverClientId ?? null,
       template: receipt.template ?? 'Padrao'
     };
   }

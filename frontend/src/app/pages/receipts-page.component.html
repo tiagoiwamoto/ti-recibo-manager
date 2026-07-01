@@ -102,7 +102,15 @@
 
             <div class="mb-3">
               <label class="form-label">Pagador</label>
-              <input class="form-control input-strong" name="payerName" [(ngModel)]="receiptForm.payerName" required />
+              <select class="form-select select-strong" name="payerClientId" [ngModel]="receiptForm.payerClientId" (ngModelChange)="onPayerClientChange($event)">
+                <option [ngValue]="null">-- digitar manualmente --</option>
+                <option *ngFor="let client of clients" [ngValue]="client.id">{{ clientLabel(client) }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Pagador</label>
+              <input class="form-control input-strong" name="payerName" [(ngModel)]="receiptForm.payerName" (focus)="onPayerManualFocus()" required />
             </div>
 
             <div class="row g-3 mb-3">
@@ -114,12 +122,13 @@
                   inputmode="numeric"
                   [(ngModel)]="receiptForm.payerDocument"
                   [appDocumentMask]="receiptForm.payerDocumentType"
+                  (focus)="onPayerManualFocus()"
                   required
                 />
               </div>
               <div class="col-md-6">
                 <label class="form-label">Tipo doc pagador</label>
-                <select class="form-select select-strong" name="payerDocumentType" [(ngModel)]="receiptForm.payerDocumentType">
+                <select class="form-select select-strong" name="payerDocumentType" [(ngModel)]="receiptForm.payerDocumentType" (focus)="onPayerManualFocus()">
                   <option value="CPF">CPF</option>
                   <option value="CNPJ">CNPJ</option>
                 </select>
@@ -165,7 +174,15 @@
 
             <div class="mb-3">
               <label class="form-label">Recebedor</label>
-              <input class="form-control input-strong" name="receiverName" [(ngModel)]="receiptForm.receiverName" required />
+              <select class="form-select select-strong" name="receiverClientId" [ngModel]="receiptForm.receiverClientId" (ngModelChange)="onReceiverClientChange($event)">
+                <option [ngValue]="null">-- digitar manualmente --</option>
+                <option *ngFor="let client of clients" [ngValue]="client.id">{{ clientLabel(client) }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Recebedor</label>
+              <input class="form-control input-strong" name="receiverName" [(ngModel)]="receiptForm.receiverName" (focus)="onReceiverManualFocus()" required />
             </div>
 
             <div class="row g-3 mb-3">
@@ -177,12 +194,13 @@
                   inputmode="numeric"
                   [(ngModel)]="receiptForm.receiverDocument"
                   [appDocumentMask]="receiptForm.receiverDocumentType"
+                  (focus)="onReceiverManualFocus()"
                   required
                 />
               </div>
               <div class="col-md-6">
                 <label class="form-label">Tipo doc recebedor</label>
-                <select class="form-select select-strong" name="receiverDocumentType" [(ngModel)]="receiptForm.receiverDocumentType">
+                <select class="form-select select-strong" name="receiverDocumentType" [(ngModel)]="receiptForm.receiverDocumentType" (focus)="onReceiverManualFocus()">
                   <option value="CPF">CPF</option>
                   <option value="CNPJ">CNPJ</option>
                 </select>

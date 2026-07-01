@@ -73,6 +73,7 @@ export interface Receipt {
   payerName: string;
   payerDocument: string;
   payerDocumentType: DocumentType;
+  payerClientId?: string | null;
   amountInWords?: string | null;
   reference: string;
   notes?: string | null;
@@ -82,6 +83,7 @@ export interface Receipt {
   receiverName: string;
   receiverDocument: string;
   receiverDocumentType: DocumentType;
+  receiverClientId?: string | null;
   template?: ReceiptTemplate | null;
 }
 
@@ -92,6 +94,7 @@ export interface ReceiptForm {
   payerName: string;
   payerDocument: string;
   payerDocumentType: DocumentType;
+  payerClientId: string | null;
   amountInWords: string;
   reference: string;
   notes: string;
@@ -101,6 +104,7 @@ export interface ReceiptForm {
   receiverName: string;
   receiverDocument: string;
   receiverDocumentType: DocumentType;
+  receiverClientId: string | null;
   template: ReceiptTemplate;
 }
 

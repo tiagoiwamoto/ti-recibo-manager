@@ -24,6 +24,8 @@ public record ReceiptRequest(
         @NotBlank @Size(min = 5, max = 160) String receiverName,
         @NotBlank @Size(min = 11, max = 20) String receiverDocument,
         @NotNull DocumentType receiverDocumentType,
+        String payerClientId,
+        String receiverClientId,
         @Size(max = 40) String template
 ) {
 }
