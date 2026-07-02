@@ -112,6 +112,38 @@ export class ClientsPageComponent implements OnInit {
     }
   }
 
+  async loadAddressByCep(): Promise<void> {
+    const cep = this.clientForm.postalCode?.replace(/\D/g, '');
+    if (!cep || cep.length !== 8) {
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+
+    try {
+      const response = await firstValueFrom(this.api.getCep(cep));
+      if (response.erro) {
+        this.error = 'CEP nao encontrado.';
+        return;
+      }
+      if (response.bairro) {
+        this.clientForm.address = response.bairro + (response.logradouro ? ', ' + response.logradouro : '');
+      } else {
+        this.clientForm.address = response.logradouro;
+      }
+      this.clientForm.city = response.localidade;
+      this.clientForm.state = response.uf;
+      if (!this.clientForm.country) {
+        this.clientForm.country = 'Brasil';
+      }
+    } catch (error) {
+      this.error = this.describeError(error);
+    } finally {
+      this.loading = false;
+    }
+  }
+
   async remove(id: string): Promise<void> {
     if (!confirm('Excluir este cliente?')) {
       return;

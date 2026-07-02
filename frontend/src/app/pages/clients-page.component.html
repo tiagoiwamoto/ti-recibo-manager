@@ -130,7 +130,10 @@
             <div class="row g-3 mb-3">
               <div class="col-md-6">
                 <label class="form-label">CEP</label>
-                <input class="form-control input-strong" name="postalCode" [(ngModel)]="clientForm.postalCode" />
+                <div class="input-group">
+                  <input class="form-control input-strong" name="postalCode" [(ngModel)]="clientForm.postalCode" (blur)="loadAddressByCep()" maxlength="9" />
+                  <button class="btn btn-outline-secondary" type="button" (click)="loadAddressByCep()" [disabled]="loading">Buscar</button>
+                </div>
               </div>
               <div class="col-md-6">
                 <label class="form-label">Pais</label>

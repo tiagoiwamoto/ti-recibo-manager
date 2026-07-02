@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AppConfig, Client, ClientForm, DashboardSummary, Receipt, ReceiptForm, ReceiptPreviewResponse } from './models';
+import { AppConfig, CepResponse, Client, ClientForm, DashboardSummary, Receipt, ReceiptForm, ReceiptPreviewResponse } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -58,6 +58,10 @@ export class ApiService {
 
   getConfig(): Observable<AppConfig> {
     return this.http.get<AppConfig>(this.url('/config'));
+  }
+
+  getCep(cep: string): Observable<CepResponse> {
+    return this.http.get<CepResponse>(this.url(`/cep/${cep}`));
   }
 
   updateConfig(payload: AppConfig): Observable<AppConfig> {

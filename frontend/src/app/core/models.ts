@@ -118,6 +118,16 @@ export interface AppConfig {
   receiptTemplate: ReceiptTemplate;
 }
 
+export interface CepResponse {
+  cep: string;
+  logradouro: string;
+  complemento: string;
+  bairro: string;
+  localidade: string;
+  uf: string;
+  erro: boolean;
+}
+
 export interface ReceiptPreviewResponse {
   id: string;
   receiptType: ReceiptType;
