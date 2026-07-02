@@ -28,6 +28,6 @@ public interface SpringDataReceiptRepository extends JpaRepository<ReceiptJpaEnt
     @Query("select coalesce(sum(r.amount), 0) from ReceiptJpaEntity r")
     BigDecimal sumAmount();
 
-    @Query(value = "select coalesce(max(cast(id as integer)), 0) from receipts where regexp_like(id, '^[0-9]+$')", nativeQuery = true)
+    @Query(value = "select coalesce(max(cast(id as integer)), 0) from receipts where id ~ '^[0-9]+$'", nativeQuery = true)
     Integer findMaxNumericId();
 }
