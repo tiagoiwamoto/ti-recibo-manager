@@ -2,84 +2,58 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { DomSanitizer } from '@angular/platform-browser';
+import { NbAlertModule, NbButtonModule, NbCardModule, NbDialogService, NbInputModule } from '@nebular/theme';
 import { ApiService } from '../core/api.service';
-import { Client, Receipt, ReceiptForm, ReceiptPreviewResponse, ReceiptTemplate, RECEIPT_TEMPLATES } from '../core/models';
-import { amountToWords, dateToWords } from '../core/receipt-utils';
-import { formatByDocumentType } from '../core/document-mask';
-import { DocumentMaskDirective } from '../core/document-mask.directive';
+import { Receipt, ReceiptTemplate, RECEIPT_TEMPLATES } from '../core/models';
 import { ReceiptTemplateService } from '../core/receipt-template.service';
+import { ReceiptDialogComponent } from './receipts/receipt-dialog.component';
+import { ReceiptPreviewDialogComponent } from './receipts/receipt-preview-dialog.component';
+import { ConfirmDialogComponent } from '../shared/confirm-dialog.component';
 
 @Component({
   selector: 'app-receipts-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, DocumentMaskDirective],
+  imports: [CommonModule, FormsModule, NbAlertModule, NbButtonModule, NbCardModule, NbInputModule],
   templateUrl: './receipts-page.component.html'
 })
 export class ReceiptsPageComponent implements OnInit {
   readonly templates = RECEIPT_TEMPLATES;
 
   receipts: Receipt[] = [];
-  clients: Client[] = [];
   search = '';
   loading = false;
   error = '';
-  modalOpen = false;
-  previewOpen = false;
-  previewLoading = false;
-  previewHtml: any = '';
-  receiptForm: ReceiptForm = this.emptyForm();
-  amountInput = '';
 
-  constructor(private readonly api: ApiService, private readonly templateService: ReceiptTemplateService, private readonly sanitizer: DomSanitizer) {}
+  constructor(
+    private readonly api: ApiService,
+    private readonly templateService: ReceiptTemplateService,
+    private readonly dialogService: NbDialogService
+  ) {}
 
   ngOnInit(): void {
-    this.amountInput = this.formatCurrencyFromNumber(this.receiptForm.amount);
     void this.load();
-    void this.loadClients();
-  }
-
-  emptyForm(): ReceiptForm {
-    return {
-      id: null,
-      receiptType: 'CREDITOR',
-      amount: 0,
-      payerName: '',
-      payerDocument: '',
-      payerDocumentType: 'CPF',
-      payerClientId: null,
-      amountInWords: '',
-      reference: '',
-      notes: '',
-      issueDate: '',
-      place: '',
-      issueDateText: '',
-      receiverName: '',
-      receiverDocument: '',
-      receiverDocumentType: 'CPF',
-      receiverClientId: null,
-      template: 'Padrao'
-    };
   }
 
   openCreate(): void {
-    this.receiptForm = this.emptyForm();
-    this.amountInput = this.formatCurrencyFromNumber(this.receiptForm.amount);
     this.error = '';
-    this.modalOpen = true;
+    this.dialogService
+      .open(ReceiptDialogComponent)
+      .onClose.subscribe((saved) => void this.onSaved(saved));
   }
 
   editReceipt(receipt: Receipt): void {
-    this.receiptForm = this.toForm(receipt);
-    this.amountInput = this.formatCurrencyFromNumber(this.receiptForm.amount);
-    this.receiptForm.payerDocument = formatByDocumentType(this.receiptForm.payerDocument, this.receiptForm.payerDocumentType);
-    this.receiptForm.receiverDocument = formatByDocumentType(this.receiptForm.receiverDocument, this.receiptForm.receiverDocumentType);
     this.error = '';
-    this.modalOpen = true;
+    this.dialogService
+      .open(ReceiptDialogComponent, { context: { receipt } })
+      .onClose.subscribe((saved) => void this.onSaved(saved));
   }
 
-  closeModal(): void {
-    this.modalOpen = false;
+  private async onSaved(saved: Receipt | undefined): Promise<void> {
+    if (!saved) {
+      return;
+    }
+    await this.load();
+    await this.preview(saved.id, saved.template ?? 'Padrao');
   }
 
   async load(): Promise<void> {
@@ -95,159 +69,38 @@ export class ReceiptsPageComponent implements OnInit {
     }
   }
 
-  async loadClients(): Promise<void> {
-    try {
-      this.clients = await firstValueFrom(this.api.listClients());
-    } catch (error) {
-      this.error = this.describeError(error);
-    }
-  }
-
-  async save(): Promise<void> {
-    this.loading = true;
-    this.error = '';
-
-    try {
-      const saved = await firstValueFrom(
-        this.receiptForm.id
-          ? this.api.updateReceipt(this.receiptForm.id, this.buildPayload())
-          : this.api.createReceipt(this.buildPayload())
-      );
-
-      this.modalOpen = false;
-      await this.load();
-      await this.preview(saved.id, saved.template ?? this.receiptForm.template, true);
-    } catch (error) {
-      this.error = this.describeError(error);
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  async remove(id: string): Promise<void> {
-    if (!confirm('Excluir este recibo?')) {
-      return;
-    }
-
-    this.loading = true;
-    this.error = '';
-
-    try {
-      await firstValueFrom(this.api.deleteReceipt(id));
-      await this.load();
-    } catch (error) {
-      this.error = this.describeError(error);
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  async preview(id: string | null | undefined, template?: string, openModal = false): Promise<void> {
+  async preview(id: string | null | undefined, template?: string): Promise<void> {
     if (!id) {
       return;
     }
 
-    this.previewLoading = true;
     try {
       const response = await firstValueFrom(this.api.previewReceipt(id, template));
       const html = this.templateService.renderReceipt(response);
-      this.previewHtml = this.sanitizer.bypassSecurityTrustHtml(html);
-      if (openModal) {
-        this.previewOpen = true;
-      }
+      this.dialogService.open(ReceiptPreviewDialogComponent, { context: { html } });
     } catch (error) {
       this.error = this.describeError(error);
-    } finally {
-      this.previewLoading = false;
     }
   }
 
-  async previewDraft(openModal = true): Promise<void> {
-    this.previewLoading = true;
-    this.error = '';
-    try {
-      const response = await firstValueFrom(
-        this.api.previewReceiptDraft(this.buildPayload(), this.receiptForm.template)
-      );
-      const html = this.templateService.renderReceipt(response);
-      this.previewHtml = this.sanitizer.bypassSecurityTrustHtml(html);
-      if (openModal) {
-        this.previewOpen = true;
-      }
-    } catch (error) {
-      this.error = this.describeError(error);
-    } finally {
-      this.previewLoading = false;
-    }
-  }
-
-  onTemplateChange(): void {
-    if (this.previewOpen) {
-      void this.previewDraft(false);
-    }
-  }
-
-  onPayerClientChange(clientId: string | null): void {
-    this.receiptForm.payerClientId = clientId;
-    if (clientId) {
-      const client = this.clients.find((c) => c.id === clientId);
-      if (client) {
-        this.receiptForm.payerName = client.name;
-        this.receiptForm.payerDocument = formatByDocumentType(client.document, client.documentType);
-        this.receiptForm.payerDocumentType = client.documentType;
-      }
-    }
-  }
-
-  onReceiverClientChange(clientId: string | null): void {
-    this.receiptForm.receiverClientId = clientId;
-    if (clientId) {
-      const client = this.clients.find((c) => c.id === clientId);
-      if (client) {
-        this.receiptForm.receiverName = client.name;
-        this.receiptForm.receiverDocument = formatByDocumentType(client.document, client.documentType);
-        this.receiptForm.receiverDocumentType = client.documentType;
-      }
-    }
-  }
-
-  onPayerManualFocus(): void {
-    this.receiptForm.payerClientId = null;
-  }
-
-  onReceiverManualFocus(): void {
-    this.receiptForm.receiverClientId = null;
-  }
-
-  closePreview(): void {
-    this.previewOpen = false;
-  }
-
-  printPreview(): void {
-    const htmlContent = typeof this.previewHtml === 'string' ? this.previewHtml : (this.previewHtml?.changingThisBreaksApplicationSecurity || '');
-    const printWindow = window.open('', '_blank');
-    if (printWindow && htmlContent) {
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => {
-        printWindow.print();
-      }, 250);
-    }
-  }
-
-  syncAmountInWords(): void {
-    this.receiptForm.amountInWords = amountToWords(this.receiptForm.amount);
-  }
-
-  onAmountInputChange(value: string): void {
-    this.amountInput = this.formatCurrencyInput(value);
-    this.receiptForm.amount = this.parseCurrencyToNumber(this.amountInput);
-    this.syncAmountInWords();
-  }
-
-  syncIssueDateText(): void {
-    this.receiptForm.issueDateText = dateToWords(this.receiptForm.issueDate);
+  remove(id: string): void {
+    this.dialogService
+      .open(ConfirmDialogComponent, { context: { message: 'Excluir este recibo?' } })
+      .onClose.subscribe(async (confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+        this.loading = true;
+        this.error = '';
+        try {
+          await firstValueFrom(this.api.deleteReceipt(id));
+          await this.load();
+        } catch (error) {
+          this.error = this.describeError(error);
+        } finally {
+          this.loading = false;
+        }
+      });
   }
 
   trackById(_: number, receipt: Receipt): string {
@@ -256,62 +109,6 @@ export class ReceiptsPageComponent implements OnInit {
 
   templateLabel(value: ReceiptTemplate | null | undefined): string {
     return this.templates.find((option) => option.value === value)?.label ?? 'Padrao';
-  }
-
-  templateDescription(value: ReceiptTemplate | null | undefined): string {
-    return this.templates.find((option) => option.value === value)?.description ?? '';
-  }
-
-  clientLabel(client: Client): string {
-    return `${client.name} - ${formatByDocumentType(client.document, client.documentType)}`;
-  }
-
-  private buildPayload(): ReceiptForm {
-    this.receiptForm.amount = this.parseCurrencyToNumber(this.amountInput);
-    const { id, ...payload } = this.receiptForm;
-    return { ...payload, amount: Number(payload.amount) } as ReceiptForm;
-  }
-
-  private toForm(receipt: Receipt): ReceiptForm {
-    return {
-      id: receipt.id,
-      receiptType: receipt.receiptType ?? 'CREDITOR',
-      amount: Number(receipt.amount ?? 0),
-      payerName: receipt.payerName ?? '',
-      payerDocument: receipt.payerDocument ?? '',
-      payerDocumentType: receipt.payerDocumentType ?? 'CPF',
-      payerClientId: receipt.payerClientId ?? null,
-      amountInWords: receipt.amountInWords ?? amountToWords(receipt.amount),
-      reference: receipt.reference ?? '',
-      notes: receipt.notes ?? '',
-      issueDate: receipt.issueDate ?? '',
-      place: receipt.place ?? '',
-      issueDateText: receipt.issueDateText ?? dateToWords(receipt.issueDate),
-      receiverName: receipt.receiverName ?? '',
-      receiverDocument: receipt.receiverDocument ?? '',
-      receiverDocumentType: receipt.receiverDocumentType ?? 'CPF',
-      receiverClientId: receipt.receiverClientId ?? null,
-      template: receipt.template ?? 'Padrao'
-    };
-  }
-
-  private formatCurrencyInput(value: string): string {
-    const digits = (value ?? '').replace(/\D/g, '');
-    const numeric = Number(digits || '0') / 100;
-    return this.formatCurrencyFromNumber(numeric);
-  }
-
-  private formatCurrencyFromNumber(value: number): string {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
-  }
-
-  private parseCurrencyToNumber(value: string): number {
-    const normalized = (value ?? '')
-      .replace(/[^\d,]/g, '')
-      .replace(/\./g, '')
-      .replace(',', '.');
-    const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : 0;
   }
 
   private describeError(error: unknown): string {

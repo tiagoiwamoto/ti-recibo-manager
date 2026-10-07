@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Recibo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .recibo {
+            background: #fff;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .info {
+            margin-bottom: 10px;
+        }
+
+        .info strong {
+            display: inline-block;
+            width: 120px;
+        }
+
+        .descricao {
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+
+        .valor {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .assinatura {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .linha {
+            border-top: 1px solid #000;
+            width: 200px;
+            margin: 10px auto;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .recibo {
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="recibo">
+    <div class="header">
+        <h1>RECIBO</h1>
+    </div>
+
+    <div class="info">
+        <p><strong>Data:</strong> 10/06/2026</p>
+        <p><strong>Recebido de:</strong> Nome do Cliente</p>
+        <p><strong>CPF/CNPJ:</strong> 000.000.000-00</p>
+    </div>
+
+    <div class="descricao">
+        Recebi a quantia de <strong>R$ 500,00</strong> (quinhentos reais),
+        referente a pagamento de serviços prestados / produto vendido.
+    </div>
+
+    <div class="valor">
+        Total: R$ 500,00
+    </div>
+
+    <div class="assinatura">
+        <div class="linha"></div>
+        <p>Assinatura emissor</p>
+    </div>
+    <div class="assinatura">
+        <div class="linha"></div>
+        <p>Assinatura pagador</p>
+    </div>
+</div>
+
+</body>
+</html>

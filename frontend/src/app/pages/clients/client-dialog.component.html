@@ -1,0 +1,104 @@
+<nb-card class="dialog-card">
+  <nb-card-header>
+    <div class="dialog-header">
+      <h5>{{ form.id ? 'Editar cliente' : 'Novo cliente' }}</h5>
+      <button nbButton ghost size="small" type="button" (click)="cancel()" aria-label="Fechar">
+        <nb-icon icon="close-outline"></nb-icon>
+      </button>
+    </div>
+  </nb-card-header>
+
+  <nb-card-body>
+    <nb-alert *ngIf="error" status="danger" (close)="error = ''">{{ error }}</nb-alert>
+
+    <form (ngSubmit)="save()" #clientFormRef="ngForm" novalidate>
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="client-name">Nome</label>
+        <input id="client-name" nbInput fullWidth name="name" [(ngModel)]="form.name" required />
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="client-doc-type">Tipo documento</label>
+          <nb-select id="client-doc-type" fullWidth name="documentType" [(ngModel)]="form.documentType">
+            <nb-option value="CPF">CPF</nb-option>
+            <nb-option value="CNPJ">CNPJ</nb-option>
+          </nb-select>
+        </div>
+        <div class="field">
+          <label for="client-doc">Documento</label>
+          <input
+            id="client-doc"
+            nbInput
+            fullWidth
+            name="document"
+            inputmode="numeric"
+            [(ngModel)]="form.document"
+            [appDocumentMask]="form.documentType"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="client-rg">RG</label>
+          <input id="client-rg" nbInput fullWidth name="rg" [(ngModel)]="form.rg" />
+        </div>
+        <div class="field">
+          <label for="client-birth">Data nascimento</label>
+          <input id="client-birth" nbInput fullWidth name="birthDate" [(ngModel)]="form.birthDate" type="date" />
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="client-address">Endereco</label>
+        <input id="client-address" nbInput fullWidth name="address" [(ngModel)]="form.address" required />
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="client-city">Cidade</label>
+          <input id="client-city" nbInput fullWidth name="city" [(ngModel)]="form.city" required />
+        </div>
+        <div class="field">
+          <label for="client-state">Estado</label>
+          <input id="client-state" nbInput fullWidth name="state" [(ngModel)]="form.state" />
+        </div>
+        <div class="field">
+          <label for="client-cep">CEP</label>
+          <div class="search-group">
+            <input
+              id="client-cep"
+              nbInput
+              fullWidth
+              name="postalCode"
+              [(ngModel)]="form.postalCode"
+              (blur)="loadAddressByCep()"
+              maxlength="9"
+            />
+            <button nbButton status="basic" type="button" (click)="loadAddressByCep()" [disabled]="loading">Buscar</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="client-country">Pais</label>
+          <input id="client-country" nbInput fullWidth name="country" [(ngModel)]="form.country" />
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="client-cnh">Habilitacao</label>
+        <input id="client-cnh" nbInput fullWidth name="driverLicense" [(ngModel)]="form.driverLicense" />
+      </div>
+
+      <div class="field">
+        <label for="client-notes">Observacoes</label>
+        <textarea id="client-notes" nbInput fullWidth name="notes" [(ngModel)]="form.notes" rows="3"></textarea>
+      </div>
+    </form>
+  </nb-card-body>
+
+  <nb-card-footer>
+    <div class="dialog-actions">
+      <button nbButton status="basic" type="button" (click)="cancel()">Cancelar</button>
+      <button nbButton status="primary" type="submit" (click)="save()" [disabled]="loading">Salvar</button>
+    </div>
+  </nb-card-footer>
+</nb-card>

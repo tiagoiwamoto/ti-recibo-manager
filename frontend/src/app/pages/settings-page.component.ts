@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
+import { NbAlertModule, NbButtonModule, NbCardModule, NbInputModule, NbSelectModule } from '@nebular/theme';
 import { ApiService } from '../core/api.service';
 import { AppConfig, RECEIPT_TEMPLATES } from '../core/models';
 import { formatByDocumentType } from '../core/document-mask';
@@ -10,7 +11,7 @@ import { DocumentMaskDirective } from '../core/document-mask.directive';
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, DocumentMaskDirective],
+  imports: [CommonModule, FormsModule, DocumentMaskDirective, NbAlertModule, NbButtonModule, NbCardModule, NbInputModule, NbSelectModule],
   templateUrl: './settings-page.component.html'
 })
 export class SettingsPageComponent implements OnInit {

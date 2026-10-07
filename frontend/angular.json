@@ -24,7 +24,10 @@
                 "output": "/"
               }
             ],
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "node_modules/@nebular/theme/styles/prebuilt/corporate.css",
+              "src/styles.scss"
+            ],
             "scripts": [],
             "optimization": {
               "fonts": false

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { NbAlertModule, NbButtonModule, NbCardModule } from '@nebular/theme';
 import { ApiService } from '../core/api.service';
 import { DashboardSummary } from '../core/models';
 import { StatCardComponent } from '../shared/stat-card.component';
@@ -8,7 +9,7 @@ import { StatCardComponent } from '../shared/stat-card.component';
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, StatCardComponent],
+  imports: [CommonModule, StatCardComponent, NbAlertModule, NbButtonModule, NbCardModule],
   templateUrl: './dashboard-page.component.html'
 })
 export class DashboardPageComponent implements OnInit {

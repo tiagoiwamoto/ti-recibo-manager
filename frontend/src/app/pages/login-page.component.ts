@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { NbButtonModule, NbCardModule, NbSpinnerModule } from '@nebular/theme';
 import { AuthService } from '../core/auth.service';
 
 @Component({
   selector: 'app-login-page',
   standalone: true,
+  imports: [NbCardModule, NbButtonModule, NbSpinnerModule],
   templateUrl: './login-page.component.html'
 })
 export class LoginPageComponent implements OnInit {

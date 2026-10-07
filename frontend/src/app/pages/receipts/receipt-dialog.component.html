@@ -1,0 +1,168 @@
+<nb-card class="dialog-card">
+  <nb-card-header>
+    <div class="dialog-header">
+      <h5>{{ form.id ? 'Editar recibo' : 'Novo recibo' }}</h5>
+      <button nbButton ghost size="small" type="button" (click)="cancel()" aria-label="Fechar">
+        <nb-icon icon="close-outline"></nb-icon>
+      </button>
+    </div>
+  </nb-card-header>
+
+  <nb-card-body>
+    <nb-alert *ngIf="error" status="danger" (close)="error = ''">{{ error }}</nb-alert>
+
+    <form (ngSubmit)="save()" #receiptFormRef="ngForm" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="receipt-type">Tipo</label>
+          <nb-select id="receipt-type" fullWidth name="receiptType" [(ngModel)]="form.receiptType">
+            <nb-option value="CREDITOR">Recebimento</nb-option>
+            <nb-option value="DEBTOR">Pagamento</nb-option>
+          </nb-select>
+        </div>
+        <div class="field">
+          <label for="receipt-amount">Valor</label>
+          <input
+            id="receipt-amount"
+            nbInput
+            fullWidth
+            name="amountInput"
+            [(ngModel)]="amountInput"
+            inputmode="numeric"
+            type="text"
+            (ngModelChange)="onAmountInputChange($event)"
+          />
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="payer-client">Pagador</label>
+        <nb-select id="payer-client" fullWidth name="payerClientId" [ngModel]="form.payerClientId" (ngModelChange)="onPayerClientChange($event)">
+          <nb-option [value]="null">-- digitar manualmente --</nb-option>
+          <nb-option *ngFor="let client of clients" [value]="client.id">{{ clientLabel(client) }}</nb-option>
+        </nb-select>
+      </div>
+
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="payer-name">Pagador</label>
+        <input id="payer-name" nbInput fullWidth name="payerName" [(ngModel)]="form.payerName" (focus)="onPayerManualFocus()" required />
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="payer-doc">Doc pagador</label>
+          <input
+            id="payer-doc"
+            nbInput
+            fullWidth
+            name="payerDocument"
+            inputmode="numeric"
+            [(ngModel)]="form.payerDocument"
+            [appDocumentMask]="form.payerDocumentType"
+            (focus)="onPayerManualFocus()"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="payer-doc-type">Tipo doc pagador</label>
+          <nb-select id="payer-doc-type" fullWidth name="payerDocumentType" [(ngModel)]="form.payerDocumentType" (focus)="onPayerManualFocus()">
+            <nb-option value="CPF">CPF</nb-option>
+            <nb-option value="CNPJ">CNPJ</nb-option>
+          </nb-select>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="amount-words">Valor por extenso</label>
+        <input id="amount-words" nbInput fullWidth status="basic" [value]="form.amountInWords" readonly />
+      </div>
+
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="receipt-reference">Referente</label>
+        <input id="receipt-reference" nbInput fullWidth name="reference" [(ngModel)]="form.reference" required />
+      </div>
+
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="receipt-notes">Observacoes</label>
+        <textarea id="receipt-notes" nbInput fullWidth name="notes" [(ngModel)]="form.notes" rows="3"></textarea>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="issue-date">Data emissao</label>
+          <input
+            id="issue-date"
+            nbInput
+            fullWidth
+            name="issueDate"
+            [(ngModel)]="form.issueDate"
+            type="date"
+            (ngModelChange)="syncIssueDateText()"
+          />
+        </div>
+        <div class="field">
+          <label for="issue-date-text">Data por extenso</label>
+          <input id="issue-date-text" nbInput fullWidth status="basic" [value]="form.issueDateText" readonly />
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="receipt-place">Local</label>
+        <input id="receipt-place" nbInput fullWidth name="place" [(ngModel)]="form.place" required />
+      </div>
+
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="receiver-client">Recebedor</label>
+        <nb-select id="receiver-client" fullWidth name="receiverClientId" [ngModel]="form.receiverClientId" (ngModelChange)="onReceiverClientChange($event)">
+          <nb-option [value]="null">-- digitar manualmente --</nb-option>
+          <nb-option *ngFor="let client of clients" [value]="client.id">{{ clientLabel(client) }}</nb-option>
+        </nb-select>
+      </div>
+
+      <div class="field" style="margin-bottom: 1rem;">
+        <label for="receiver-name">Recebedor</label>
+        <input id="receiver-name" nbInput fullWidth name="receiverName" [(ngModel)]="form.receiverName" (focus)="onReceiverManualFocus()" required />
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="receiver-doc">Doc recebedor</label>
+          <input
+            id="receiver-doc"
+            nbInput
+            fullWidth
+            name="receiverDocument"
+            inputmode="numeric"
+            [(ngModel)]="form.receiverDocument"
+            [appDocumentMask]="form.receiverDocumentType"
+            (focus)="onReceiverManualFocus()"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="receiver-doc-type">Tipo doc recebedor</label>
+          <nb-select id="receiver-doc-type" fullWidth name="receiverDocumentType" [(ngModel)]="form.receiverDocumentType" (focus)="onReceiverManualFocus()">
+            <nb-option value="CPF">CPF</nb-option>
+            <nb-option value="CNPJ">CNPJ</nb-option>
+          </nb-select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="receipt-template">Layout do recibo</label>
+        <nb-select id="receipt-template" fullWidth name="template" [(ngModel)]="form.template">
+          <nb-option *ngFor="let option of templates" [value]="option.value">{{ option.label }}</nb-option>
+        </nb-select>
+        <span class="hint">{{ templateDescription(form.template) }}</span>
+      </div>
+    </form>
+  </nb-card-body>
+
+  <nb-card-footer>
+    <div class="dialog-actions">
+      <button nbButton status="basic" type="button" (click)="cancel()">Cancelar</button>
+      <button nbButton status="info" type="button" [disabled]="previewLoading" (click)="previewDraft()">Ver preview</button>
+      <button nbButton status="primary" type="submit" (click)="save()" [disabled]="loading">Salvar</button>
+    </div>
+  </nb-card-footer>
+</nb-card>

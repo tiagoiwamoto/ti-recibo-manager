@@ -26,7 +26,7 @@ Crie (ou ajuste) no Authentik:
 - **Application slug**: `tirecibomanager`
 - **Provider** (OAuth2/OIDC, público + PKCE):
   - Client ID: configurado em `environment.ts` no frontend
-  - Redirect URIs: `https://recibos.kamehouse.com.br/`, `http://localhost:4200/`
+  - Redirect URIs: `https://recibomanager.kamehouse.com.br/`, `http://localhost:4200/`
   - Scopes: `openid profile email`
 - Issuer resultante: `https://auth.kamehouse.com.br/application/o/tirecibomanager/`
 
@@ -83,7 +83,7 @@ npm run dev   # http://localhost:4200
 | `POSTGRES_URI` | backend | `jdbc:postgresql://localhost:5432/recibomanager` |
 | `POSTGRES_USERNAME` | backend | `postgres` |
 | `POSTGRES_PASSWORD` | backend | `postgres` |
-| `APP_ALLOWED_ORIGIN_PATTERNS` | backend | `http://localhost:*,http://127.0.0.1:*,https://localhost:*,https://recibos.kamehouse.com.br` |
+| `APP_ALLOWED_ORIGIN_PATTERNS` | backend | `http://localhost:*,http://127.0.0.1:*,https://localhost:*,https://recibomanager.kamehouse.com.br` |
 | `SSL_CERT_PATH` / `SSL_CERT_KEY_PATH` | backend (perfil `local`) | `/certificates/fullchain.pem` / `/certificates/privkey.pem` |
 
 No frontend, o bloco `oidc { authority, clientId, redirectUri, ... }` fica em

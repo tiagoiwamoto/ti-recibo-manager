@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recibo %s</title>
+    <style>
+        :root { --ink: #18212b; --muted: #667085; --line: rgba(24, 33, 43, 0.14); --accent: #0f766e; --accent-soft: #ecfdf5; --paper: #fffefb; }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 28px; background: linear-gradient(180deg, #f6efe6 0%%, #eef7f4 100%%); color: var(--ink); font-family: "Inter", "Segoe UI", Arial, sans-serif; }
+        .page { max-width: 860px; margin: 0 auto; background: var(--paper); border: 1px solid var(--line); border-radius: 28px; overflow: hidden; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12); }
+        .hero { padding: 28px 34px 22px; background: radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 32%%), linear-gradient(135deg, #fff7ed 0%%, #ffffff 58%%); border-bottom: 1px solid var(--line); }
+        .eyebrow { margin: 0 0 10px; text-transform: uppercase; letter-spacing: .18em; font-size: .74rem; font-weight: 800; color: var(--accent); }
+        .hero-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+        h1 { margin: 0; font-size: 2rem; letter-spacing: .06em; }
+        .hero p { margin: 10px 0 0; max-width: 28rem; color: var(--muted); line-height: 1.6; }
+        .value-card { min-width: 220px; padding: 18px 20px; border-radius: 22px; background: #0f172a; color: #f8fafc; text-align: right; }
+        .value-card span { display: block; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; opacity: .72; }
+        .value-card strong { display: block; margin-top: 8px; font-size: 1.8rem; line-height: 1.1; }
+        .content { padding: 30px 34px 34px; }
+        .content p { margin: 0 0 16px; font-size: 1.03rem; line-height: 1.85; text-align: justify; }
+        .field { font-weight: 700; }
+        .chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 22px 0; }
+        .chip { border: 1px solid var(--line); background: #fff; border-radius: 18px; padding: 14px 16px; }
+        .chip-label { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); margin-bottom: 8px; }
+        .chip-value { font-weight: 700; line-height: 1.5; }
+        .meta { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; margin-top: 26px; }
+        .meta-card { border: 1px solid var(--line); background: var(--accent-soft); border-radius: 20px; padding: 16px 18px; }
+        .meta-card strong { display: block; margin-bottom: 8px; font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+        .date-box { display: flex; align-items: end; justify-content: center; text-align: center; }
+        .date-box div { font-size: 1rem; line-height: 1.7; }
+        .signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 44px; margin-top: 62px; }
+        .signature-flow { min-height: 96px; display: flex; flex-direction: column; justify-content: flex-end; }
+        .signature-bar { border-top: 2px solid #18212b; padding-top: 10px; text-align: center; }
+        .signature-name { font-weight: 800; font-size: 1rem; }
+        .signature-doc { margin-top: 4px; color: var(--muted); font-size: .9rem; }
+        .signature-role { margin-top: 8px; text-transform: uppercase; letter-spacing: .14em; font-size: .74rem; color: var(--accent); }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .page { border: none; border-radius: 0; box-shadow: none; max-width: none; }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <section class="hero">
+        <p class="eyebrow">Recibo contemporaneo</p>
+        <div class="hero-row">
+            <div>
+                <h1>Quitacao registrada</h1>
+                <p>Documento financeiro com composicao moderna, leitura leve e assinatura em fluxo separado para pagador e recebedor.</p>
+            </div>
+            <div class="value-card">
+                <span>Recibo %s</span>
+                <strong>%s</strong>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <p>
+            Recebi(emos) de <span class="field">%s</span>, inscrito(a) no documento <span class="field">%s</span>,
+            a quantia de <span class="field">%s</span> (<span class="field">%s</span>), referente a
+            <span class="field">%s</span>.
+        </p>
+        <p>Para producao de efeitos de quitacao e comprovacao, este recibo segue assinado pelas partes indicadas abaixo.</p>
+        <div class="chips">
+            <div class="chip">
+                <span class="chip-label">Recebedor</span>
+                <div class="chip-value">%s<br>%s</div>
+            </div>
+            <div class="chip">
+                <span class="chip-label">Emitente padrao</span>
+                <div class="chip-value">%s</div>
+            </div>
+            <div class="chip">
+                <span class="chip-label">Observacoes</span>
+                <div class="chip-value">%s</div>
+            </div>
+        </div>
+        <div class="meta">
+            <div class="meta-card">
+                <strong>Referencia</strong>
+                <div>%s</div>
+            </div>
+            <div class="meta-card date-box">
+                <div>%s<br>%s</div>
+            </div>
+        </div>
+        <section class="signatures">
+            <div class="signature-flow">
+                <div class="signature-bar">
+                    <div class="signature-name">%s</div>
+                    <div class="signature-doc">%s</div>
+                    <div class="signature-role">Fluxo de assinatura do pagador</div>
+                </div>
+            </div>
+            <div class="signature-flow">
+                <div class="signature-bar">
+                    <div class="signature-name">%s</div>
+                    <div class="signature-doc">%s</div>
+                    <div class="signature-role">Fluxo de assinatura do recebedor</div>
+                </div>
+            </div>
+        </section>
+    </section>
+</main>
+</body>
+</html>
